@@ -1,0 +1,41 @@
+from config import client, MODEL_NAME, chat_history
+
+def generate_response(system_prompt, user_input, use_history=True):
+    messages = [{"role": "system", "content": system_prompt}]
+    if use_history:
+        messages += chat_history[-6:]
+    messages.append({"role": "user", "content": user_input})
+    response = client.chat.completions.create(
+        model = MODEL_NAME,
+        messages = messages,
+        temperature = 0.2
+    )
+    bot_response = response.choices[0].message.content.strip()
+    chat_history.append({"role": "user", "content": user_input})
+    chat_history.append({"role": "assistant", "content": bot_response})
+    return bot_response
+
+def handle_chat(user_input):
+    return generate_response(
+        "You are a helpful assistant. Use previous conversation context when relevant.",
+        user_input,
+        use_history = True
+    )
+def handle_email(user_input):
+    return generate_response(
+        "You are a professional email writer. If the user is refining a previously written email, use conversation context.",
+        user_input,
+        use_history = True
+    )
+def handle_summarize(user_input):
+    return generate_response(
+        "You summarize text clearly and concisely. Use previous context if the user is referring to earlier text.",
+        user_input,
+        use_history = True
+    )
+def handle_code(user_input):
+    return generate_response(
+        "You help debug and explain code clearly. Use previous conversation context if the user is referring to earlier code.",
+        user_input,
+        use_history = True
+    )
