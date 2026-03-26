@@ -1,6 +1,6 @@
 from config import client, MODEL_NAME, classifier_prompt
 from handler import handle_chat, handle_email, handle_summarize, handle_code
-
+import argparse
 def classify_intent(user_input):
     response = client.chat.completions.create(
         model = MODEL_NAME,
@@ -23,20 +23,30 @@ handlers = {
     "code": handle_code
 }
 class ChatBot:
-    def __init__(self):
+    def __init__(self, debug = False):
         self.chat_history = []
+        self.debug = debug
     def run(self):
         while True:
             user_input = input("User: ")
+            if self.debug:
+                print("[Debug] User Input:", user_input) 
             if user_input.lower() == "exit":
                 print("Goodbye!")
                 break
             intent = classify_intent(user_input)
-            print("Intent:", intent)
+            if self.debug:
+                print("[Debug] Inten:", intent)  
+                print("[Debug] Handler:", handlers[intent].__name__)
             bot_response = handlers[intent](user_input, self.chat_history)
             print("Bot:", bot_response)
-def main():
-    bot = ChatBot()
+def main(debug=False):
+    bot = ChatBot(debug)
+    if debug:
+        print("Debug mode is ON")
     bot.run()
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    args = parser.parse_args()
+    main(debug=args.debug)
