@@ -22,13 +22,21 @@ handlers = {
     "email": handle_email,
     "code": handle_code
 }
-
-while True:
-    user_input = input("User: ")
-    if user_input.lower() == "exit":
-        print("Goodbye!")
-        break
-    intent = classify_intent(user_input)
-    print("Intent:", intent)
-    bot_response = handlers[intent](user_input)
-    print("Bot:", bot_response)
+class ChatBot:
+    def __init__(self):
+        pass
+    def run(self):
+        while True:
+            user_input = input("User: ")
+            if user_input.lower() == "exit":
+                print("Goodbye!")
+                break
+        intent = classify_intent(user_input)
+        print("Intent:", intent)
+        bot_response = handlers[intent](user_input)
+        print("Bot:", bot_response)
+def main():
+    bot = ChatBot()
+    bot.run()
+if __name__ == "__main__":
+    main()

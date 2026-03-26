@@ -1,5 +1,4 @@
 from groq import Groq
-
 client = Groq()
 
 # messages represent the tone and content of the conversation.
