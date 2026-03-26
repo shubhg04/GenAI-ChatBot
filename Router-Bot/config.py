@@ -18,4 +18,3 @@ Rules:
 - If the message asks about code, programming, bugs, debugging, errors, or fixing code, return code
 - For anything else, return chat
 """
-chat_history = []
