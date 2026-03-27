@@ -1,6 +1,8 @@
 from config import client, MODEL_NAME, classifier_prompt
 from handler import handle_chat, handle_email, handle_summarize, handle_code
 import argparse
+import json
+import os
 def classify_intent(user_input):
     response = client.chat.completions.create(
         model = MODEL_NAME,
@@ -24,8 +26,20 @@ handlers = {
 }
 class ChatBot:
     def __init__(self, debug = False):
-        self.chat_history = []
+        self.history_file = "chat_history.json"
+        self.chat_history = self.load_chat_history()
         self.debug = debug
+    def load_chat_history(self):
+        if os.path.exists(self.history_file):
+            try:
+                with open(self.history_file, "r") as f:
+                    return json.load(f)
+            except Exception:
+                print("[DEBUG] Failed to load chat history. Using default.")
+        return [{"role": "system", "content": "You are a helpful assistant."}]
+    def save_chat_history(self):
+        with open(self.history_file, "w") as f:
+            json.dump(self.chat_history, f, indent = 2)
     def run(self):
         while True:
             user_input = input("User: ")
@@ -40,7 +54,8 @@ class ChatBot:
                 print("[Debug] Handler:", handlers[intent].__name__)
             bot_response = handlers[intent](user_input, self.chat_history)
             print("Bot:", bot_response)
-def main(debug=False):
+            self.save_chat_history()
+def main(debug = False):
     bot = ChatBot(debug)
     if debug:
         print("Debug mode is ON")
