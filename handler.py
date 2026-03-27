@@ -3,7 +3,7 @@ from config import client, MODEL_NAME
 def generate_response(system_prompt, user_input, chat_history, use_history=True):
     messages = [{"role": "system", "content": system_prompt}]
     if use_history:
-        messages += chat_history[-6:]
+        messages += chat_history[-10:]
     messages.append({"role": "user", "content": user_input})
     response = client.chat.completions.create(
         model = MODEL_NAME,
@@ -13,6 +13,8 @@ def generate_response(system_prompt, user_input, chat_history, use_history=True)
     bot_response = response.choices[0].message.content.strip()
     chat_history.append({"role": "user", "content": user_input})
     chat_history.append({"role": "assistant", "content": bot_response})
+    if len(chat_history) > 21:
+        chat_history[:] = [chat_history[0]] + chat_history[-20:]
     return bot_response
 
 def handle_chat(user_input, chat_history):
