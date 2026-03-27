@@ -1,8 +1,7 @@
 from config import client, MODEL_NAME, classifier_prompt
 from handler import handle_chat, handle_email, handle_summarize, handle_code
+from memory_manager import MemoryManager
 import argparse
-import json
-import os
 def classify_intent(user_input):
     response = client.chat.completions.create(
         model = MODEL_NAME,
@@ -26,20 +25,9 @@ handlers = {
 }
 class ChatBot:
     def __init__(self, debug = False):
-        self.history_file = "chat_history.json"
-        self.chat_history = self.load_chat_history()
+        self.memory = MemoryManager("chat_history.json")
+        self.chat_history = self.memory.load()
         self.debug = debug
-    def load_chat_history(self):
-        if os.path.exists(self.history_file):
-            try:
-                with open(self.history_file, "r") as f:
-                    return json.load(f)
-            except Exception:
-                print("[DEBUG] Failed to load chat history. Using default.")
-        return [{"role": "system", "content": "You are a helpful assistant."}]
-    def save_chat_history(self):
-        with open(self.history_file, "w") as f:
-            json.dump(self.chat_history, f, indent = 2)
     def run(self):
         while True:
             user_input = input("User: ")
@@ -48,13 +36,17 @@ class ChatBot:
             if user_input.lower() == "exit":
                 print("Goodbye!")
                 break
+            if user_input.lower() == "reset":
+                self.chat_history = self.memory.clear()
+                print("Bot: Memory cleared.")
+                continue
             intent = classify_intent(user_input)
             if self.debug:
                 print("[Debug] Inten:", intent)  
                 print("[Debug] Handler:", handlers[intent].__name__)
             bot_response = handlers[intent](user_input, self.chat_history)
             print("Bot:", bot_response)
-            self.save_chat_history()
+            self.memory.save(self.chat_history)
 def main(debug = False):
     bot = ChatBot(debug)
     if debug:
