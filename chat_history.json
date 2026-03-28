@@ -2,5 +2,29 @@
   {
     "role": "system",
     "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "What is my name"
+  },
+  {
+    "role": "assistant",
+    "content": "I don't have any information about your name. This is the beginning of our conversation, and I don't retain any context from previous conversations. If you'd like to share your name with me, I'd be happy to learn it."
+  },
+  {
+    "role": "user",
+    "content": "Hi my name is Bobby"
+  },
+  {
+    "role": "assistant",
+    "content": "Nice to meet you, Bobby. I'm here to help with any questions or topics you'd like to discuss. Is there something specific on your mind, or would you like to chat about something in particular?"
+  },
+  {
+    "role": "user",
+    "content": "what my name"
+  },
+  {
+    "role": "assistant",
+    "content": "Your name is Bobby."
   }
 ]

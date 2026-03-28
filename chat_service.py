@@ -19,4 +19,9 @@ class ChatService:
         
         bot_response = handler(user_input, chat_history)
         self.memory.save(chat_history)
-        return bot_response
+
+        return {
+            "user_input": user_input,
+            "bot_response": bot_response,
+            "intent": intent
+        }
