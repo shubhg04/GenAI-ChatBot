@@ -5,15 +5,25 @@ class MemoryManager:
         self.file_path = file_path
 
     def load(self):
+        default_history  = [
+            {"role": "system", "content": "You are a helpful assistant."}
+        ]
         if os.path.exists(self.file_path):
             try:
                 with open(self.file_path, "r") as f:
                     return json.load(f)
             except Exception:
-                print("[DEBUG] Failed to load memory. Using default.")               
-        return [
-            {"role": "system", "content": "You are a helpful assistant."}
-        ]
+                backup_file = f"{self.file_path}.backup"
+                try:
+                    os.rename(self.file_path, backup_file)
+                    print(f"[DEBUG] Corrupted memory backed up as: {backup_file}")
+                except Exception as backup_error:
+                    print(f"[DEBUG] Failed to create backup: {backup_error}")
+
+                print("[DEBUG] Failed to load memory. Using default.")      
+
+        return default_history
+    
     def save(self, chat_history):
         with open(self.file_path, "w") as f:
             json.dump(chat_history, f, indent=2)

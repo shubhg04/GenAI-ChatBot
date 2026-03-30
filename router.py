@@ -7,6 +7,7 @@ class ChatBot:
         self.memory = MemoryManager("chat_history.json")
         self.debug = debug
         self.service = ChatService(self.memory, debug = self.debug)
+    
     def run(self):
         while True:
             user_input = input("User: ")
@@ -19,14 +20,18 @@ class ChatBot:
                 self.memory.clear()
                 print("Bot: Memory cleared.")
                 continue
-            bot_response = self.service.process(user_input)
-            print("Bot:", bot_response)
-    
+
+            ChatService_Result = self.service.process(user_input)
+            print("Bot:", ChatService_Result["bot_response"])
+            if not self.debug:
+                print("Intent:", ChatService_Result["intent"])
+
 def main(debug = False):
     bot = ChatBot(debug)
     if debug:
         print("Debug mode is ON")
     bot.run()
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
