@@ -1,0 +1,14 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "what are response headers"
+  },
+  {
+    "role": "assistant",
+    "content": "Response headers are a set of metadata that are sent back to the client (usually a web browser) along with the response body in an HTTP request. They provide additional information about the response, such as:\n\n1. **Status codes**: Indicate the outcome of the request (e.g., 200 OK, 404 Not Found, 500 Internal Server Error).\n2. **Content type**: Specify the format of the response body (e.g., text/html, application/json).\n3. **Cache control**: Indicate whether the response can be cached and for how long.\n4. **Cookies**: Set or update cookies on the client's browser.\n5. **Redirects**: Specify a new URL to redirect the client to.\n6. **Authentication**: Provide authentication information, such as the user's login status.\n\nCommon response headers include:\n\n* `Content-Type`: specifies the format of the response body\n* `Content-Length`: specifies the size of the response body\n* `Set-Cookie`: sets a cookie on the client's browser\n* `Location`: specifies a new URL to redirect the client to\n* `Expires`: specifies when the response expires (for caching purposes)\n* `Cache-Control`: specifies caching instructions (e.g., no-cache, max-age=3600)\n\nHere's an example of a response header:\n```http\nHTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\nContent-Length: 1234\nSet-Cookie: session_id=1234567890\nLocation: https://example.com/\nExpires: Thu, 01 Jan 2026 00:00:00 GMT\nCache-Control: max-age=3600\n```\nIn this example, the response has a status code of 200 (OK), a content type of text/html, and a content length of 1234 bytes. The response also sets a cookie named `session_id` with a value of `1234567890` and redirects the client to `https://example.com/`. The response expires on January 1, 2026, and can be cached for up to 3600 seconds (1 hour)."
+  }
+]

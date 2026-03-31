@@ -1,6 +1,7 @@
 from memory_manager import MemoryManager
 from chat_service import ChatService  
 import argparse
+import uuid
 
 class ChatBot:
     def __init__(self, debug = False):
@@ -20,8 +21,10 @@ class ChatBot:
                 self.memory.clear()
                 print("Bot: Memory cleared.")
                 continue
+            
+            request_id = str(uuid.uuid4())
+            ChatService_Result = self.service.process(user_input, "cli-session" , request_id)
 
-            ChatService_Result = self.service.process(user_input)
             print("Bot:", ChatService_Result["bot_response"])
             if not self.debug:
                 print("Intent:", ChatService_Result["intent"])
