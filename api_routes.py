@@ -1,8 +1,18 @@
 from fastapi import APIRouter, HTTPException, Request
 from dependencies import get_memory, build_chat_service
 from feedback_manager import FeedbackManager
-from schemas import ChatRequest, ChatResponse, ResetRequest, ResetResponse, FeedbackRequest, FeedbackSummaryResponse
+from build_knowledge_base import build_knowledge_base
 import logging
+from schemas import (
+    ChatRequest, 
+    ChatResponse, 
+    ResetRequest, 
+    ResetResponse, 
+    FeedbackRequest, 
+    FeedbackSummaryResponse, 
+    BuildKnowledgeBaseResponse
+)
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -27,7 +37,9 @@ def chat(request: ChatRequest, http_request: Request):
         ChatService_Result = service.process(
             request.user_input, 
             request.session_id,
-            request_id
+            request_id,
+            use_rag = request.use_rag,
+            debug = request.debug
         )
 
         logger.info(f"Request ID: {request_id} - Sending response for session: {request.session_id}")
@@ -70,6 +82,7 @@ def reset(request: ResetRequest, http_request: Request):
     
 @router.post("/feedback", tags=["Feedback"])
 def submit_feedback(request: FeedbackRequest, http_request: Request):
+
     request_id = http_request.state.request_id
 
     try:
@@ -126,3 +139,25 @@ def feedback_summary(http_request: Request):
         )
         raise HTTPException(status_code=500, detail=str(error))
 
+@router.post("/knowledge-base/re-build", response_model = BuildKnowledgeBaseResponse, tags = ['RAG'])
+def rebuild_knowledge_base(http_request: Request):
+    request_id = http_request.state.request_id
+
+    try:
+        logger.info(
+            f"Request ID: {request_id} - Rebuilding knowledge base"
+        )
+
+        result = build_knowledge_base()
+
+        logger.info(
+            f"Request ID: {request_id} - Knowledge base rebuilt successfully with {result['total_chunks']} chunks"
+        )
+
+        return result
+    
+    except Exception as error:
+        logger.exception(
+            f"Request ID: {request_id} - Error while rebuilding knowledge base"
+        )
+        raise HTTPException(status_code=500, detail=str(error))

@@ -11,7 +11,7 @@ async def request_logging_middleware(request: Request, call_next):
     request.state.request_id = request_id
 
     logger.info(
-        f"Request ID: {request_id} - Incoming request: {request.method} {request.url}"
+        f"Request ID: {request_id} - Incoming request: {request.method} {request.url.path}"
     )
 
     response = await call_next(request)

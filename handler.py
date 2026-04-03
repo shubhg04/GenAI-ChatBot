@@ -1,7 +1,29 @@
 from config import client, MODEL_NAME
 
-def generate_response(system_prompt, user_input, chat_history, use_history=True):
-    messages = [{"role": "system", "content": system_prompt}]
+def build_rag_prompt(base_prompt, retrieved_chunks):
+    if not retrieved_chunks:
+        return base_prompt
+    
+    context_lines = []
+    for index, chunk in enumerate(retrieved_chunks, start=1):
+        context_lines.append(
+            f"Context {index}:\nTitle: {chunk['title']}\nContent: {chunk['content']}\n"
+        )
+        joined_context = "\n\n".join(context_lines)
+
+        return (
+            f"{base_prompt}\n\n"
+            f"Use the retrieved context below when it is relevant to the user's question.\n"
+            f"If the context is relevant, prioritize it.\n"
+            f"If the context is not relevant, answer normally.\n\n"
+            f"Retrieved Context:\n{joined_context}"
+        )
+        
+
+def generate_response(system_prompt, user_input, chat_history, use_history=True, retrieved_chunks = None):
+    final_system_prompt = build_rag_prompt(system_prompt, retrieved_chunks or [])
+
+    messages = [{"role": "system", "content": final_system_prompt}]
     
     if use_history:
         messages += chat_history[-10:]
@@ -21,31 +43,35 @@ def generate_response(system_prompt, user_input, chat_history, use_history=True)
         chat_history[:] = [chat_history[0]] + chat_history[-20:]
     return bot_response
 
-def handle_chat(user_input, chat_history):
+def handle_chat(user_input, chat_history, retrieved_chunks = None):
     return generate_response(
         "You are a helpful assistant. Use previous conversation context when relevant.",
         user_input,
         chat_history,
-        use_history = True
+        use_history = True,
+        retrieved_chunks = retrieved_chunks
     )
-def handle_email(user_input, chat_history):
+def handle_email(user_input, chat_history, retrieved_chunks = None):
     return generate_response(
         "You are a professional email writer. If the user is refining a previously written email, use conversation context.",
         user_input,
         chat_history,
-        use_history = True
+        use_history = True,
+        retrieved_chunks = retrieved_chunks
     )
-def handle_summarize(user_input, chat_history):
+def handle_summarize(user_input, chat_history, retrieved_chunks = None):
     return generate_response(
         "You summarize text clearly and concisely. Use previous context if the user is referring to earlier text.",
         user_input,
         chat_history,   
-        use_history = True
+        use_history = True,
+        retrieved_chunks = retrieved_chunks
     )
-def handle_code(user_input, chat_history):
+def handle_code(user_input, chat_history, retrieved_chunks = None):
     return generate_response(
         "You help debug and explain code clearly. Use previous conversation context if the user is referring to earlier code.",
         user_input,
         chat_history,   
-        use_history = True
+        use_history = True,
+        retrieved_chunks = retrieved_chunks
     )

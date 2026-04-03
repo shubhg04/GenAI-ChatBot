@@ -3,12 +3,22 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     user_input: str = Field(..., min_length=1)
     session_id: str = Field(..., min_length=1)
+    use_rag: bool = True
+    debug: bool = False
+
+class RetrievedChunk(BaseModel):
+    id: str
+    title: str
+    content: str
+    score: int
 
 class ChatResponse(BaseModel):
     user_input: str 
     bot_response: str
     intent: str
     session_id: str
+    rag_used: bool
+    retrieved_chunks: list | None = None
 
 class ResetRequest(BaseModel):
     session_id: str = Field(..., min_length=1)
@@ -16,7 +26,6 @@ class ResetRequest(BaseModel):
 class ResetResponse(BaseModel):
     message: str
     session_id: str
-    request_id: str
 
 class FeedbackRequest(BaseModel):
     session_id: str = Field(..., min_length=1)
@@ -29,3 +38,9 @@ class FeedbackSummaryResponse(BaseModel):
     total_feedback: int
     average_rating: float
     ratings_count: dict[str, int]
+
+class BuildKnowledgeBaseResponse(BaseModel):
+    message: str
+    total_documents: int
+    total_chunks: int
+    knowledge_file: str

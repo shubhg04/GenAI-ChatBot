@@ -18,3 +18,7 @@ Rules:
 - If the message asks about code, programming, bugs, debugging, errors, or fixing code, return code
 - For anything else, return chat
 """
+
+RAG_KNOWLEDGE_FILE = "knowledge_base.json"
+RAG_TOP_K = 3
+RAG_MIN_SCORE = 2
