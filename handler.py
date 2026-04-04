@@ -14,11 +14,11 @@ def build_rag_prompt(base_prompt, retrieved_chunks):
         return (
             f"{base_prompt}\n\n"
             f"Use the retrieved context below when it is relevant to the user's question.\n"
-            f"If the context is relevant, prioritize it.\n"
+            f"Answer accurately based on the context, but explain in your own words.\n"
+            f"Do not copy the context word-for-word unless the user asks for an exact quote.\n"
             f"If the context is not relevant, answer normally.\n\n"
             f"Retrieved Context:\n{joined_context}"
         )
-        
 
 def generate_response(system_prompt, user_input, chat_history, use_history=True, retrieved_chunks = None):
     final_system_prompt = build_rag_prompt(system_prompt, retrieved_chunks or [])

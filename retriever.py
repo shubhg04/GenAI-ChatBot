@@ -1,12 +1,13 @@
 import json
 import os
 import re
-from config import RAG_KNOWLEDGE_FILE, RAG_MIN_SCORE
+from config import RAG_KNOWLEDGE_FILE, RAG_SIMILARITY_THRESHOLD
+from embedding_utils import embed_text, cosine_similarity
 
 class SimpleRetriever:
-    def __init__(self, knowledge_file = RAG_KNOWLEDGE_FILE, min_score = RAG_MIN_SCORE):
+    def __init__(self, knowledge_file = RAG_KNOWLEDGE_FILE, similarity_threshold = RAG_SIMILARITY_THRESHOLD):
         self.knowledge_file = knowledge_file
-        self.min_score = min_score
+        self.similarity_threshold = similarity_threshold
 
     def load_knowledge_base(self):
         if not os.path.exists(self.knowledge_file):
@@ -15,35 +16,28 @@ class SimpleRetriever:
         with open(self.knowledge_file, "r", encoding="utf-8") as file:
             return json.load(file)
 
-    def tokenize(self, text):
-        return re.findall(r'\b\w+\b', text.lower())
-
-    def score_entry(self, query, entry):
-        query_tokens = set(self.tokenize(query))
-        content_tokens = set(self.tokenize(entry.get("content", "")))
-        keyword_tokens = set(token.lower() for token in entry.get("keywords", []))
-        title_tokens = set(self.tokenize(entry.get("title", "")))
-
-        score = 0
-        score += len(query_tokens & content_tokens)
-        score += 2 * len(query_tokens & keyword_tokens)
-        score += len(query_tokens & title_tokens)
-
-        return score
-
     def retrieve(self, query, top_k = 3):
         knowledge_base = self.load_knowledge_base()
 
+        if not knowledge_base:
+            return []
+
+        query_embedding = embed_text(query)
         scored_entries = []
+       
         for entry in knowledge_base:
-            score = self.score_entry(query, entry)
-            if score >= self.min_score:
+            entry_eb = entry.get("embedding", [])
+            if not isinstance(entry_eb, list) or not entry_eb:
+                continue
+
+            similarity = cosine_similarity(query_embedding, entry_eb)
+            if similarity >= self.similarity_threshold:
                 scored_entries.append(
                     {
                         "id": entry.get("id"),
                         "title": entry.get("title"),
                         "content": entry.get("content"),
-                        "score": score
+                        "score": round(similarity, 4)
                     }
                 )
 

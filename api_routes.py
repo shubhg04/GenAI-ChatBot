@@ -151,13 +151,13 @@ def rebuild_knowledge_base(http_request: Request):
         result = build_knowledge_base()
 
         logger.info(
-            f"Request ID: {request_id} - Knowledge base rebuilt successfully with {result['total_chunks']} chunks"
+            f"Request ID: {request_id} - Knowledge base rebuilt successfully with | document {result['total_documents']} | chunks {result['total_chunks']} | file {result['knowledge_file']}"
         )
 
         return result
     
     except Exception as error:
         logger.exception(
-            f"Request ID: {request_id} - Error while rebuilding knowledge base"
+            f"Request ID: {request_id} - Error while rebuilding knowledge base: {str(error)}"
         )
         raise HTTPException(status_code=500, detail=str(error))

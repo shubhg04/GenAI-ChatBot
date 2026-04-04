@@ -1,6 +1,14 @@
 from groq import Groq
+
 client = Groq()
+
 MODEL_NAME = "llama-3.1-8b-instant"
+
+RAG_KNOWLEDGE_FILE = "knowledge_base.json"
+RAG_TOP_K = 3
+EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+RAG_SIMILARITY_THRESHOLD = 0.3
+
 classifier_prompt = """
 You are an intent classifier for a GenAI assistant.
 Your job is to classify the user's message into exactly one of these labels:
@@ -19,6 +27,4 @@ Rules:
 - For anything else, return chat
 """
 
-RAG_KNOWLEDGE_FILE = "knowledge_base.json"
-RAG_TOP_K = 3
-RAG_MIN_SCORE = 2
+

@@ -6,7 +6,7 @@ from config import RAG_TOP_K
 logger = logging.getLogger(__name__)
 
 class ChatService:
-    def __init__(self, memory, debug=False):
+    def __init__(self, memory, debug = False):
         self.memory = memory
         self.debug = debug
         self.retriever = SimpleRetriever()
@@ -28,11 +28,11 @@ class ChatService:
             retrieved_chunks = self.retriever.retrieve(clean_input, top_k = RAG_TOP_K)
             rag_used = len(retrieved_chunks) > 0
             logger.info(
-                f"Request ID: {request_id} - Session: {session_id} - retrieval returned {len(retrieved_chunks)} chunks"
+                f"Request ID: {request_id} - Session: {session_id} - vector retrieval returned {len(retrieved_chunks)} chunks"
             )
         else:
             logger.info(
-                f"Request ID: {request_id} - Session: {session_id} - requested chat without RAG"
+                f"Request ID: {request_id} - Session: {session_id} - RAG disabled for this chat"
             )
             
         handler = handlers.get(intent, handlers["chat"])
@@ -52,7 +52,7 @@ class ChatService:
                 "rag_used": rag_used,
             }
 
-        if debug:
+        if debug or self.debug:
             ChatService_Result["retrieved_chunks"] = retrieved_chunks
 
         return ChatService_Result

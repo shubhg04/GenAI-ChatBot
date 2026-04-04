@@ -10,7 +10,7 @@ class RetrievedChunk(BaseModel):
     id: str
     title: str
     content: str
-    score: int
+    score: float
 
 class ChatResponse(BaseModel):
     user_input: str 
@@ -18,7 +18,7 @@ class ChatResponse(BaseModel):
     intent: str
     session_id: str
     rag_used: bool
-    retrieved_chunks: list | None = None
+    retrieved_chunks: list[RetrievedChunk] | None = None
 
 class ResetRequest(BaseModel):
     session_id: str = Field(..., min_length=1)
@@ -42,5 +42,7 @@ class FeedbackSummaryResponse(BaseModel):
 class BuildKnowledgeBaseResponse(BaseModel):
     message: str
     total_documents: int
+    processed_documents: int
+    skipped_documents: int
     total_chunks: int
     knowledge_file: str
