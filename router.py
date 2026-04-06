@@ -1,13 +1,16 @@
 from memory_manager import MemoryManager
 from chat_service import ChatService  
+from retriever import FAISSRetriever
 import argparse
 import uuid
+
+retriever = FAISSRetriever()
 
 class ChatBot:
     def __init__(self, debug = False):
         self.memory = MemoryManager("chat_history.json")
         self.debug = debug
-        self.service = ChatService(self.memory, debug = self.debug)
+        self.service = ChatService(self.memory, retriever = retriever, debug = self.debug)
     
     def run(self):
         while True:

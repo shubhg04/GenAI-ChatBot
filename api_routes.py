@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-from dependencies import get_memory, build_chat_service
+from dependencies import get_memory, build_chat_service, reload_retriever
 from feedback_manager import FeedbackManager
 from build_knowledge_base import build_knowledge_base
 import logging
@@ -149,6 +149,7 @@ def rebuild_knowledge_base(http_request: Request):
         )
 
         result = build_knowledge_base()
+        reload_retriever()
 
         logger.info(
             f"Request ID: {request_id} - Knowledge base rebuilt successfully with | document {result['total_documents']} | chunks {result['total_chunks']} | file {result['knowledge_file']}"

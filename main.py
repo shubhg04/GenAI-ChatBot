@@ -2,17 +2,25 @@ import logging
 from fastapi import FastAPI
 from api_routes import router
 from middleware import request_logging_middleware
+from dependencies import initialize_retriever
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
     title = "AI Chatbot API",
     description = "A FastAPI backend for an intent-based  GenAI chatbot with memory, routing, and reset support.",
     version = "1.0.0"
 )
+
+@app.on_event("startup")
+def startup_event():
+    initialize_retriever()
+    logger.info("Application startup completed successfully.")
 
 app.middleware("http")(request_logging_middleware)
 

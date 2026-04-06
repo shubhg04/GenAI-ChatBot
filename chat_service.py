@@ -1,15 +1,14 @@
 import logging
 from routing import classify_intent, handlers
-from retriever import FAISSRetriever
 from config import RAG_TOP_K
 
 logger = logging.getLogger(__name__)
 
 class ChatService:
-    def __init__(self, memory, debug = False):
+    def __init__(self, memory, retriever, debug = False):
         self.memory = memory
         self.debug = debug
-        self.retriever = FAISSRetriever()
+        self.retriever = retriever
 
     def process(self, user_input, session_id, request_id, use_rag = True, debug = False):
         clean_input = user_input.strip() 
