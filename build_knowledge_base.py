@@ -1,7 +1,9 @@
 import json
 import os
 import re
-from config import RAG_KNOWLEDGE_FILE
+import faiss
+import numpy as np
+from config import RAG_METADATA_FILE, FAISS_INDEX_FILE
 from embedding_utils import embed_text
 
 
@@ -22,7 +24,7 @@ def split_into_sentences(text):
 
 
 def build_chunks_from_document(document, chunk_size = CHUNK_SIZE):
-    if isinstance(document, dict):
+    if not isinstance(document, dict):
         return []
     
     doc_id = document.get("doc_id")
@@ -47,16 +49,15 @@ def build_chunks_from_document(document, chunk_size = CHUNK_SIZE):
             "id": f"{document['doc_id']}-chunk-{(index // chunk_size) + 1}",
             "title": document.get("title", "Untitled"),
             "content": chunk_text,
-            "embedding": embed_text(chunk_text)
         }
         chunks.append(chunk)
 
     return chunks
 
-
 def build_knowledge_base():
     documents = load_documents()
-    knowledge_base = []
+    metadata = []
+    embedding_vectors = []
     processed_docs = 0
     skipped_docs = 0
 
@@ -66,18 +67,31 @@ def build_knowledge_base():
             skipped_docs += 1
             continue
         processed_docs += 1
-        knowledge_base.extend(document_chunks)
 
-    with open(RAG_KNOWLEDGE_FILE, "w", encoding="utf-8") as file:
-        json.dump(knowledge_base, file, indent = 4)
+        for chunk in document_chunks:
+            embedding = embed_text(chunk["content"])
+            metadata.append(chunk)
+            embedding_vectors.append(embedding)
+
+    with open(RAG_METADATA_FILE, "w", encoding="utf-8") as file:
+        json.dump(metadata, file, indent = 4)
+
+    if embedding_vectors:
+        embedding_matrix = np.array(embedding_vectors, dtype = "float32")
+        faiss.normalize_L2(embedding_matrix)
+        
+        vector_dimension = embedding_matrix.shape[1]
+        index = faiss.IndexFlatIP(vector_dimension)
+        index.add(embedding_matrix)
+        faiss.write_index(index, FAISS_INDEX_FILE)
 
     return {
         "message": f"Knowledge base built successfully.",
         "total_documents": len(documents),
         "processed_documents": processed_docs,
         "skipped_documents": skipped_docs,
-        "total_chunks": len(knowledge_base),
-        "knowledge_file": RAG_KNOWLEDGE_FILE
+        "total_chunks": len(metadata),
+        "knowledge_file": RAG_METADATA_FILE
     }
 
 

@@ -1,0 +1,14 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "What is this document about?"
+  },
+  {
+    "role": "assistant",
+    "content": "This document appears to be about the basic flow of how a system like myself works, specifically in terms of answering user questions. It mentions a process called \"chunking\" which involves breaking down large documents into smaller pieces to make it easier and more accurate to retrieve relevant information."
+  }
+]
