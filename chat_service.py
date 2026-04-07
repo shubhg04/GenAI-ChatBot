@@ -26,9 +26,14 @@ class ChatService:
         if use_rag:
             retrieved_chunks = self.retriever.retrieve(clean_input, top_k = RAG_TOP_K)
             rag_used = len(retrieved_chunks) > 0
-            logger.info(
-                f"Request ID: {request_id} - Session: {session_id} - vector retrieval returned {len(retrieved_chunks)} chunks"
-            )
+            if rag_used:
+                logger.info(
+                    f"Request ID: {request_id} - Session: {session_id} - vector retrieval returned {len(retrieved_chunks)} chunks after threshold filtering"
+                )
+            else:
+                logger.info(
+                    f"Request ID: {request_id} - Session: {session_id} - retrieval ran, but no chunks passed the similarity threshold"
+                )
         else:
             logger.info(
                 f"Request ID: {request_id} - Session: {session_id} - RAG disabled for this chat"

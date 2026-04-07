@@ -13,10 +13,11 @@ def build_rag_prompt(base_prompt, retrieved_chunks):
 
         return (
             f"{base_prompt}\n\n"
-            f"Use the retrieved context below when it is relevant to the user's question.\n"
-            f"Answer accurately based on the context, but explain in your own words.\n"
-            f"Do not copy the context word-for-word unless the user asks for an exact quote.\n"
-            f"If the context is not relevant, answer normally.\n\n"
+            f"Use the retrieved context below only if it is clearly relevant to the user's question.\n"
+            f"If the context helps, use it to answer more accurately.\n"
+            f"If the context is incomplete or not relevant, do not force it into the answer.\n"
+            f"Answer normally if the retrieved context does not help.\n"
+            f"Explain in your own words and do not copy the context word-for-word unless the user asks for an exact quote.\n\n"
             f"Retrieved Context:\n{joined_context}"
         )
 

@@ -2,7 +2,7 @@ import json
 import os
 import numpy as np
 import faiss
-from config import RAG_METADATA_FILE, FAISS_INDEX_FILE, RAG_TOP_K
+from config import RAG_METADATA_FILE, FAISS_INDEX_FILE, RAG_TOP_K, RAG_SIMILARITY_THRESHOLD
 from embedding_utils import embed_text
 
 class FAISSRetriever:
@@ -38,6 +38,11 @@ class FAISSRetriever:
 
         for score, idx in zip(distances[0], indices[0]):
             if idx < 0 or idx >= len(self.metadata):
+                continue
+
+            similarity_score = float(score)
+
+            if similarity_score < RAG_SIMILARITY_THRESHOLD:
                 continue
 
             chunk = self.metadata[idx]
