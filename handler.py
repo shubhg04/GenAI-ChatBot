@@ -33,7 +33,7 @@ def build_rag_prompt(base_prompt, retrieved_chunks):
         context_lines.append(
             f"Context {index}:\n"
             f"Title: {chunk['title']}\n"
-            Content: {chunk['content']}\n"
+            f"Content: {chunk['content']}\n"
         )
     
     joined_context = "\n\n".join(context_lines)
