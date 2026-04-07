@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from api_routes import router
 from middleware import request_logging_middleware
 from dependencies import initialize_retriever
+from app_database import initialize_database
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,6 +20,7 @@ app = FastAPI(
 
 @app.on_event("startup")
 def startup_event():
+    initialize_database()
     initialize_retriever()
     logger.info("Application startup completed successfully.")
 

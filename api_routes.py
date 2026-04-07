@@ -162,3 +162,68 @@ def rebuild_knowledge_base(http_request: Request):
             f"Request ID: {request_id} - Error while rebuilding knowledge base: {str(error)}"
         )
         raise HTTPException(status_code=500, detail=str(error))
+    
+@router.get("/debug/feedback", tags = ["debug"])
+def get_all_feedback(http_request: Request):
+    request_id = http_request.state.request_id
+
+    try:
+        from app_database import get_connection
+
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM feedback")
+            rows = cursor.fetchall()
+
+            results = []
+            for row in rows:
+                results.append({
+                    "id": row[0],
+                    "session_id": row[1],
+                    "request_id": row[2],
+                    "rating": row[3],
+                    "comments": row[4],
+                    "timestamp": row[5]
+                })
+
+        return {
+            "total_rows": len(results),
+            "data": results
+        }
+
+    except Exception as error:
+        logger.exception("[request_id=%s] Error fetching debug feedback", request_id)
+        raise HTTPException(status_code=500, detail=str(error))
+
+@router.get("/debug/chat-logs", tags=["debug"])
+def get_chat_logs(http_request: Request):
+    request_id = http_request.state.request_id
+
+    try:
+        from app_database import get_connection
+
+        with get_connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT * FROM chat_logs ORDER BY id DESC")
+            rows = cursor.fetchall()
+
+            results = []
+            for row in rows:
+                results.append({
+                    "id": row[0],
+                    "session_id": row[1],
+                    "request_id": row[2],
+                    "user_input": row[3],
+                    "bot_response": row[4],
+                    "intent": row[5],
+                    "rag_used": bool(row[6])
+                })
+
+        return {
+            "total_rows": len(results),
+            "data": results
+        }
+
+    except Exception as error:
+        logger.exception("[request_id=%s] Error fetching chat logs", request_id)
+        raise HTTPException(status_code=500, detail=str(error))

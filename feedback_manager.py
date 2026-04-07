@@ -1,28 +1,7 @@
-import json
-import os
-from datetime import datetime, timezone   
+from datetime import datetime, timezone
+from app_database import get_connection   
 
 class FeedbackManager:
-    def __init__(self, file_path="feedback_files/feedback.json"):
-        self.file_path = file_path
-        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
-
-    def load_feedback(self):
-        if os.path.exists(self.file_path):
-            try:
-                with open(self.file_path, "r") as f:
-                    return json.load(f)
-            except Exception:
-                return []
-        return []
-    
-    def save_feedback(self, feedback_entry):
-        all_feedback = self.load_feedback()
-        all_feedback.append(feedback_entry)
-
-        with open(self.file_path, "w") as f:
-            json.dump(all_feedback, f, indent = 2)
-
     def create_feedback_entry(self, session_id, request_id, rating, comments = None):
         return {
             "session_id": session_id,
@@ -30,12 +9,32 @@ class FeedbackManager:
             "rating": rating,
             "comments": comments,
             "timestamp": datetime.now(timezone.utc).isoformat()
-        }
+        }    
+      
+    def save_feedback(self, feedback_entry):
+        with get_connection() as connection:
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                INSERT INTO feedback (session_id, request_id, rating, comments, timestamp)
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                feedback_entry["session_id"],
+                feedback_entry["request_id"],
+                feedback_entry["rating"],
+                feedback_entry["comments"],
+                feedback_entry["timestamp"]
+            ))
+            connection.commit()
     
     def get_summary(self):
-        feedback_list = self.load_feedback()
-        
-        if not feedback_list:
+        with get_connection() as connection:
+            cursor = connection.cursor()
+
+            cursor.execute("SELECT COUNT(*) FROM feedback")
+            total_feedback = cursor.fetchone()[0]
+
+        if total_feedback == 0:
             return {
                 "total_feedback": 0,
                 "average_rating": 0,
@@ -48,20 +47,28 @@ class FeedbackManager:
                 }
             }
         
+        cursor.execute("SELECT AVG(rating) FROM feedback")
+        average_rating = round(cursor.fetchone()[0], 2)
+
+        cursor.execute("""
+                SELECT rating, COUNT(*) 
+                FROM feedback 
+                GROUP BY rating
+            """)
+            
+        rows = cursor.fetchall()
+
         ratings_count = {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
-        total_rating = 0
 
-        for entry in feedback_list:
-            rating = entry.get("rating")
-            if rating in [1, 2, 3, 4, 5]:
-                ratings_count[str(rating)] += 1
-                total_rating += rating
-
-        total_feedback = sum(ratings_count.values())
-        average_rating = round(total_rating / total_feedback, 2) if total_feedback > 0 else 0
+        for row in rows:
+            ratings_count[str(row[0])] = row[1]
 
         return {
             "total_feedback": total_feedback,
             "average_rating": average_rating,
             "ratings_count": ratings_count
         }
+
+        #f906d323-ef88-4c0c-9bbd-ca17c8933f26 
+        #35c254dc-3d1d-43f6-af6d-daa1ef3f9714
+        #79223a5d-0ed1-43e4-9e1c-3504afe060b7

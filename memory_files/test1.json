@@ -5,34 +5,26 @@
   },
   {
     "role": "user",
-    "content": "What is this document about?"
+    "content": "hello my name is bobby"
   },
   {
     "role": "assistant",
-    "content": "This document appears to be about the basic flow of how a system like myself works, specifically in terms of answering user questions. It mentions a process called \"chunking\" which involves breaking down large documents into smaller pieces to make it easier and more accurate to retrieve relevant information."
+    "content": "Hello Bobby, nice to meet you. Is there something I can help you with today?"
   },
   {
     "role": "user",
-    "content": "What does the document contain?"
+    "content": "what is rag"
   },
   {
     "role": "assistant",
-    "content": "The document contains information about the basic flow of how a system like myself answers user questions. It specifically mentions the process of searching a knowledge base, retrieving relevant chunks of information, and using that context to provide an answer."
+    "content": "RAG stands for Retrieval-Augmented Generation. It's a technology that helps improve chatbot answers by first retrieving relevant information from a knowledge source and then using that information to generate a final response. This way, the chatbot can provide more accurate and detailed answers to your questions."
   },
   {
     "role": "user",
-    "content": "What is RAG"
+    "content": "what is my name, i am 22 years old"
   },
   {
     "role": "assistant",
-    "content": "RAG stands for Retrieval-Augmented Generation. It's a process that improves chatbot answers by first retrieving relevant information from a knowledge source and then using that information to generate a final response. This helps to provide more accurate and informative answers to user questions."
-  },
-  {
-    "role": "user",
-    "content": "What does the document contain? Explain in detail."
-  },
-  {
-    "role": "assistant",
-    "content": "The document contains information about the basic flow of how a system like myself answers user questions. It explains that the process starts with the user asking a question, and then the system searches its knowledge base to retrieve relevant information.\n\nThe document also mentions a concept called \"chunking\", which involves breaking down large documents into smaller pieces. This makes it easier and more accurate for the system to retrieve the relevant information it needs to answer the user's question.\n\nOnce the system has retrieved the relevant chunks of information, it adds them to the prompt, which is essentially the question or topic being discussed. The system then uses this context, including the user's question and the retrieved information, to generate a final answer.\n\nIn essence, the document is describing the underlying process that allows systems like myself to provide accurate and informative responses to user queries."
+    "content": "You told me earlier that your name is Bobby, and you're 22 years old."
   }
 ]
