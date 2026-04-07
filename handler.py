@@ -1,4 +1,12 @@
-from config import client, MODEL_NAME
+from config import MODEL_NAME
+from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+llm = ChatGroq(
+    model = MODEL_NAME,
+    temperature = 0.2
+)
 
 def build_rag_prompt(base_prompt, retrieved_chunks):
     if not retrieved_chunks:
@@ -24,18 +32,25 @@ def build_rag_prompt(base_prompt, retrieved_chunks):
 def generate_response(system_prompt, user_input, chat_history, use_history=True, retrieved_chunks = None):
     final_system_prompt = build_rag_prompt(system_prompt, retrieved_chunks or [])
 
-    messages = [{"role": "system", "content": final_system_prompt}]
-    
-    if use_history:
-        messages += chat_history[-10:]
-    messages.append({"role": "user", "content": user_input})
-    response = client.chat.completions.create(
-        model = MODEL_NAME,
-        messages = messages,
-        temperature = 0.2
+    history_text = ""
+    if use_history and chat_history:
+        for msg in chat_history[-10:]:
+            history_text += f"{msg['role']}: {msg['content']}\n"
+
+    prompt = ChatPromptTemplate.from_template(
+        "{system_prompt}\n\n"
+        "Chat History:\n{chat_history}\n\n"
+        "User: {user_input}\n"
+        "Assistant:"
     )
-    
-    bot_response = response.choices[0].message.content.strip()
+
+    chain = prompt | llm | StrOutputParser()
+
+    bot_response = chain.invoke({
+        "system_prompt": final_system_prompt,
+        "chat_history": history_text,
+        "user_input": user_input
+    })
     
     chat_history.append({"role": "user", "content": user_input})
     chat_history.append({"role": "assistant", "content": bot_response})

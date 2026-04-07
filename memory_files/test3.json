@@ -1,0 +1,22 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "My name is Don"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello Don, it's nice to meet you. Is there something I can help you with today?"
+  },
+  {
+    "role": "user",
+    "content": "Tell me about RAG"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello Don, I'd be happy to tell you about RAG. RAG stands for Retrieval-Augmented Generation, which is a technology that helps improve chatbot answers by first searching for relevant information in a knowledge source and then using that information to generate a more accurate and detailed response. This approach allows chatbots like myself to provide more informed and helpful answers to your questions."
+  }
+]
