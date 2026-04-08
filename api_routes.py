@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Form
 from dependencies import get_memory, build_chat_service, reload_retriever
 from feedback_manager import FeedbackManager
 from build_knowledge_base import build_knowledge_base
@@ -51,6 +51,47 @@ def chat(request: ChatRequest, http_request: Request):
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as error:
         logger.exception(f"Request ID: {request_id} - Unexpected error in /chat")
+        raise HTTPException(status_code=500, detail=str(error))
+    
+@router.post("/chat-form", response_model = ChatResponse, tags=["Chat"])
+def chat_form(
+    http_request: Request,
+    user_input: str = Form(...),
+    session_id: str = Form(...),
+    use_rag: bool = Form(True),
+    debug: bool = Form(False)
+):
+    request_id = http_request.state.request_id
+
+    try:
+        logger.info(
+            "[request_id=%s] Received form message for session: %s",
+            request_id,
+            session_id
+        )
+
+        memory = get_memory(session_id)
+        service = build_chat_service(memory)
+
+        result = service.process(
+            user_input,
+            session_id,
+            request_id,
+            use_rag=use_rag,
+            debug=debug
+        )
+
+        logger.info(
+            f"{request_id} Sending form response for session: {session_id}",
+        )
+        return result
+
+    except ValueError as error:
+        logger.exception(f"{request_id} Validation error in /chat-form")
+        raise HTTPException(status_code=400, detail=str(error))
+
+    except Exception as error:
+        logger.exception(f"{request_id} Unexpected error in /chat-form")
         raise HTTPException(status_code=500, detail=str(error))
 
 @router.post("/reset", response_model = ResetResponse, tags=["Chat"])

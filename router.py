@@ -6,6 +6,18 @@ import uuid
 
 retriever = FAISSRetriever()
 
+def read_multiline_input():
+    print("User (type DONE on a new line to finish):")
+    lines = []
+
+    while True:
+        line = input()
+        if line.strip() == "DONE":
+            break
+        lines.append(line)
+
+    return "\n".join(lines).strip()
+
 class ChatBot:
     def __init__(self, debug = False):
         self.memory = MemoryManager("chat_history.json")
@@ -14,7 +26,7 @@ class ChatBot:
     
     def run(self):
         while True:
-            user_input = input("User: ")
+            user_input = read_multiline_input()
             if self.debug:
                 print("[Debug] User Input:", user_input) 
             if user_input.lower() == "exit":

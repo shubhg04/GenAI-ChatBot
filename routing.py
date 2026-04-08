@@ -1,19 +1,35 @@
-from config import client, MODEL_NAME, classifier_prompt
+from config import MODEL_NAME, classifier_prompt
 from handler import handle_chat, handle_email, handle_summarize, handle_code
+from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+classifier_llm = ChatGroq(
+    model=MODEL_NAME,
+    temperature=0.0
+)
+
+CLASSIFIER_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", classifier_prompt),
+    ("user", "{user_input}")
+])
+
+classifier_parser = StrOutputParser()
+
+classifier_chain = CLASSIFIER_PROMPT | classifier_llm | classifier_parser
 
 def classify_intent(user_input):
-    response = client.chat.completions.create(
-        model = MODEL_NAME,
-        messages=[
-            {"role": "system", "content": classifier_prompt},
-            {"role": "user", "content": user_input}
-        ],
-        temperature = 0
-    )
-    raw = response.choices[0].message.content.strip().lower()
-    intent = raw.split()[0]
-    if intent not in ["chat", "summarize", "email", "code"]:
+    raw_intent = classifier_chain.invoke({
+        "user_input": user_input
+    }).strip().lower()
+
+    intent = raw_intent.split()[0]
+
+    valid_intents = ["chat", "summarize", "email", "code"]
+
+    if intent not in valid_intents:
         intent = "chat"
+
     return intent
 
 handlers = {
