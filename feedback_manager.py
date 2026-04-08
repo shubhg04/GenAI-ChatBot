@@ -68,7 +68,3 @@ class FeedbackManager:
             "average_rating": average_rating,
             "ratings_count": ratings_count
         }
-
-        #f906d323-ef88-4c0c-9bbd-ca17c8933f26 
-        #35c254dc-3d1d-43f6-af6d-daa1ef3f9714
-        #79223a5d-0ed1-43e4-9e1c-3504afe060b7

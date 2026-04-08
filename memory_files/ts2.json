@@ -1,0 +1,14 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "What is FastAPI"
+  },
+  {
+    "role": "assistant",
+    "content": "FastAPI is a modern, fast (high-performance), web framework for building APIs with Python 3.7+ based on standard Python type hints. It's designed to be fast, scalable, and easy to use.\n\nFastAPI is built on top of standard Python type hints and supports automatic API documentation, automatic client code generation, and more. It's often used for building RESTful APIs, GraphQL APIs, and other types of APIs.\n\nSome of the key features of FastAPI include:\n\n- **High-performance**: FastAPI is designed to be fast and scalable, making it suitable for large-scale applications.\n- **Automatic API documentation**: FastAPI automatically generates API documentation using Swagger UI and Redoc.\n- **Automatic client code generation**: FastAPI can automatically generate client code in various programming languages, including Python, JavaScript, and more.\n- **Support for asynchronous programming**: FastAPI supports asynchronous programming using the asyncio library.\n- **Support for WebSockets**: FastAPI supports WebSockets, which enable bidirectional communication between the client and server.\n\nOverall, FastAPI is a powerful and flexible framework for building APIs with Python.\n\nWould you like to know more about how to use FastAPI or would you like to see some example code?"
+  }
+]
