@@ -1,8 +1,6 @@
 import logging
-from routing import classify_intent, handlers
-from config import RAG_TOP_K
 from chat_log_repository import ChatLogRepository
-from response_evaluator import ResponseEvaluator
+from langgraph_flow import build_langgraph_flow
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +10,7 @@ class ChatService:
         self.debug = debug
         self.retriever = retriever
         self.chat_log_repository = ChatLogRepository()
-        self.response_evaluator = ResponseEvaluator()
+        self.graph = build_langgraph_flow()
 
     def process(self, user_input, session_id, request_id, use_rag = True, debug = False):
         clean_input = user_input.strip()
@@ -36,74 +34,31 @@ class ChatService:
         )
 
         logger.info(
-            f"Request ID: {request_id} flow = classify_start Session: {session_id}"
+            f"Request ID: {request_id} flow=graph_start Session: {session_id}"
         )
 
-        intent = classify_intent(clean_input)
+        initial_state = {
+            "user_input": clean_input,
+            "chat_history": chat_history,
+            "use_rag": use_rag,
+            "retriever": self.retriever,
+            "intent": "",
+            "retrieved_chunks": [],
+            "rag_used": False,
+            "bot_response": "",
+            "evaluation": {}
+        }
+
+        final_state = self.graph.invoke(initial_state)
+
+        intent = final_state["intent"]
+        retrieved_chunks = final_state["retrieved_chunks"]
+        rag_used = final_state["rag_used"]
+        bot_response = final_state["bot_response"]
+        evaluation_result = final_state["evaluation"]
 
         logger.info(
-            f"Request ID: {request_id} flow = classify_done Session: {session_id} intent: {intent}"
-        )
-
-        retrieved_chunks = []
-        rag_used = False
-
-        if use_rag:
-            logger.info(
-                f"Request ID: {request_id} flow = retrieve_start Session: {session_id} top_k: {RAG_TOP_K}"
-            )
-
-            retrieved_chunks = self.retriever.retrieve(clean_input, top_k = RAG_TOP_K)
-            rag_used = len(retrieved_chunks) > 0
-
-            if rag_used:
-                top_chunk_summary = ", ".join(
-                    f"{chunk['id']} : {chunk['score']}"
-                    for chunk in retrieved_chunks[:3]
-                )
-
-                logger.info(
-                    f"Request ID: {request_id} flow = retrieve_done Session: {session_id} "
-                    f"rag_used: {rag_used} retrieved_count: {len(retrieved_chunks)} "
-                    f"top_chunks: {top_chunk_summary}"
-                )
-            else:
-                logger.info(
-                    f"Request ID: {request_id} flow = retrieve_done Session: {session_id} "
-                    f"rag_used: {rag_used} retrieved_count: 0"
-                )
-        else:
-            logger.info(
-                f"Request ID: {request_id} flow = retrieve_skipped Session: {session_id} "
-                f"rag_used: {rag_used} reason: rag_disabled"
-            )
-
-        handler = handlers.get(intent, handlers["chat"])
-
-        logger.info(
-            f"Request ID: {request_id} flow = response_start Session: {session_id} "
-            f"intent: {intent} rag_used: {rag_used}"
-        )
-
-        bot_response = handler(clean_input, chat_history, retrieved_chunks=retrieved_chunks)
-        logger.info(
-            f"Request ID: {request_id} flow = response_done Session: {session_id} "
-            f"intent: {intent} rag_used: {rag_used} response_length: {len(bot_response)}"
-        )
-
-        logger.info(
-            f"Request ID: {request_id} flow = evaluation_start "
-            f"Session: {session_id} intent: {intent}"
-        )
-
-        evaluation_result = self.response_evaluator.evaluate(
-            user_input = clean_input,
-            bot_response = bot_response
-        )
-
-        logger.info(
-            f"Request ID: {request_id} flow = evaluation_done "
-            f"Session: {session_id} score: {evaluation_result['score']} reason: {evaluation_result['reason']}",
+            f"Request ID: {request_id} flow=graph_done Session: {session_id} intent: {intent} rag_used: {rag_used} response_length: {len(bot_response)}"
         )
 
         logger.info(
@@ -125,7 +80,7 @@ class ChatService:
         self.chat_log_repository.save_chat_log(
             session_id = session_id,
             request_id = request_id,
-            user_input = user_input,
+            user_input = clean_input,
             bot_response = bot_response,
             intent = intent,
             rag_used = rag_used
