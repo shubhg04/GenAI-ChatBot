@@ -12,6 +12,10 @@ class RetrievedChunk(BaseModel):
     content: str
     score: float
 
+class EvaluationResult(BaseModel):
+    score: str
+    reason: str
+
 class ChatResponse(BaseModel):
     user_input: str 
     bot_response: str
@@ -19,6 +23,8 @@ class ChatResponse(BaseModel):
     session_id: str
     rag_used: bool
     retrieved_chunks: list[RetrievedChunk] | None = None
+    evaluation: EvaluationResult | None = None
+
 
 class ResetRequest(BaseModel):
     session_id: str = Field(..., min_length=1)

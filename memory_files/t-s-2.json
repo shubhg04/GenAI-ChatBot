@@ -1,0 +1,14 @@
+[
+  {
+    "role": "system",
+    "content": "You are a helpful assistant."
+  },
+  {
+    "role": "user",
+    "content": "Summarise this: Python is a programming language used for web development, AI, automation, and data analysis"
+  },
+  {
+    "role": "assistant",
+    "content": "Python is a versatile programming language used for various tasks, including web development, AI, automation, and data analysis."
+  }
+]
