@@ -1,11 +1,6 @@
-from groq import Groq
-
-client = Groq()
-
 MODEL_NAME = "llama-3.1-8b-instant"
 EVALUATOR_MODEL_NAME = "llama-3.1-8b-instant"
 
-RAG_KNOWLEDGE_FILE = "knowledge_base.json"
 RAG_METADATA_FILE = "knowledge_metadata.json"
 FAISS_INDEX_FILE = "knowledge.index"
 RAG_TOP_K = 3

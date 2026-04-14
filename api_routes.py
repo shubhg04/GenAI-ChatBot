@@ -17,21 +17,21 @@ from schemas import (
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-@router.get("/", tags=["General"])
+@router.get("/", tags = ["General"])
 def home():
     return {"message": "Chatbot API is running"}
 
-@router.get("/health", tags=["General"])
+@router.get("/health", tags = ["General"])
 def health_check():
     return {"status": "ok"}
 
-@router.post("/chat", response_model = ChatResponse, tags=["Chat"])
+@router.post("/chat", response_model = ChatResponse, tags = ["Chat"])
 def chat(request: ChatRequest, http_request: Request):
     request_id = http_request.state.request_id
     try:
         
         logger.info(
-            f"[Request ID: {request_id}] endpoint=/chat stage = request_received "
+            f"Request ID: {request_id} - endpoint = /chat stage = request_received "
             f"Session: {request.session_id} message_length: {len(request.user_input.strip())} "
             f"use_rag: {request.use_rag} debug: {request.debug}"
         )
@@ -40,7 +40,7 @@ def chat(request: ChatRequest, http_request: Request):
         service = build_chat_service(memory)
         
         logger.info(
-            f"[Request ID: {request_id}] endpoint=/chat stage = service_call_start "
+            f"Request ID: {request_id} - endpoint = /chat stage = service_call_start "
             f"Session: {request.session_id}"
         )
 
@@ -53,27 +53,27 @@ def chat(request: ChatRequest, http_request: Request):
         )
 
         logger.info(
-            f"Request ID: {request_id} endpoint=/chat stage = service_call_done "
+            f"Request ID: {request_id} - endpoint = /chat stage = service_call_done "
             f"Session: {request.session_id} intent: {ChatService_Result['intent']} "
             f"rag_used: {ChatService_Result['rag_used']} response_length: {len(ChatService_Result['bot_response'])}"
         )
         
         logger.info(
-            f"Request ID: {request_id} endpoint=/chat stage = response_sent "
+            f"Request ID: {request_id} - endpoint = /chat stage = response_sent "
             f"Session: {request.session_id}"
         )
 
         return ChatService_Result
     
     except ValueError as ve:
-        logger.exception(f"Request ID: {request_id} - endpoint=/chat stage = validation_error")
-        raise HTTPException(status_code=400, detail=str(ve))
+        logger.exception(f"Request ID: {request_id} - endpoint = /chat stage = validation_error")
+        raise HTTPException(status_code = 400, detail = str(ve))
     
     except Exception as error:
-        logger.exception(f"Request ID: {request_id} - endpoint=/chat stage = unexpected_error")
-        raise HTTPException(status_code=500, detail=str(error))
+        logger.exception(f"Request ID: {request_id} - endpoint = /chat stage = unexpected_error")
+        raise HTTPException(status_code = 500, detail = str(error))
     
-@router.post("/chat-form", response_model = ChatResponse, tags=["Chat"])
+@router.post("/chat-form", response_model = ChatResponse, tags = ["Chat"])
 def chat_form(
     http_request: Request,
     user_input: str = Form(...),
@@ -85,7 +85,7 @@ def chat_form(
 
     try:
         logger.info(
-            f"Request ID: {request_id} endpoint=/chat-form stage = request_received "
+            f"Request ID: {request_id} - endpoint = /chat-form stage = request_received "
             f"Session: {session_id} message_length: {len(user_input.strip())} "
             f"use_rag: {use_rag} debug: {debug}"
         )
@@ -94,7 +94,7 @@ def chat_form(
         service = build_chat_service(memory)
         
         logger.info(
-            f"[Request ID: {request_id}] endpoint=/chat-form stage = service_call_start "
+            f"Request ID: {request_id} - endpoint = /chat-form stage = service_call_start "
             f"Session: {session_id}"
         )
 
@@ -107,27 +107,27 @@ def chat_form(
         )
 
         logger.info(
-            f"Request ID: {request_id} endpoint=/chat-form stage = service_call_done "
+            f"Request ID: {request_id} - endpoint = /chat-form stage = service_call_done "
             f"Session: {session_id} intent: {ChatService_Result['intent']} "
             f"rag_used: {ChatService_Result['rag_used']} response_length: {len(ChatService_Result['bot_response'])}"
         )
         
         logger.info(
-            f"Request ID: {request_id} endpoint=/chat-form stage = response_sent "
+            f"Request ID: {request_id} - endpoint = /chat-form stage = response_sent "
             f"Session: {session_id}"
         )
 
         return ChatService_Result
 
     except ValueError as ve:
-        logger.exception(f"Request ID: {request_id} - endpoint=/chat-form stage = validation_error")
-        raise HTTPException(status_code=400, detail=str(ve))
+        logger.exception(f"Request ID: {request_id} - endpoint = /chat-form stage = validation_error")
+        raise HTTPException(status_code = 400, detail = str(ve))
     
     except Exception as error:
-        logger.exception(f"Request ID: {request_id} - endpoint=/chat-form stage = unexpected_error")
-        raise HTTPException(status_code=500, detail=str(error))
+        logger.exception(f"Request ID: {request_id} - endpoint = /chat-form stage = unexpected_error")
+        raise HTTPException(status_code = 500, detail = str(error))
 
-@router.post("/reset", response_model = ResetResponse, tags=["Chat"])
+@router.post("/reset", response_model = ResetResponse, tags = ["Chat"])
 def reset(request: ResetRequest, http_request: Request):
     request_id = http_request.state.request_id
 
@@ -152,9 +152,9 @@ def reset(request: ResetRequest, http_request: Request):
         logger.exception(
             f"Request ID: {request_id} - Unexpected error in /reset"
         )
-        raise HTTPException(status_code=500, detail=str(error))
+        raise HTTPException(status_code = 500, detail = str(error))
     
-@router.post("/feedback", tags=["Feedback"])
+@router.post("/feedback", tags = ["Feedback"])
 def submit_feedback(request: FeedbackRequest, http_request: Request):
 
     request_id = http_request.state.request_id
@@ -176,7 +176,7 @@ def submit_feedback(request: FeedbackRequest, http_request: Request):
         feedback_manager.save_feedback(entry)
 
         logger.info(
-            f"Request ID: {request_id} - Feedback saved successfully for targer request: {request.request_id}"
+            f"Request ID: {request_id} - Feedback saved successfully for target request: {request.request_id}"
         )
 
         return {
@@ -187,9 +187,9 @@ def submit_feedback(request: FeedbackRequest, http_request: Request):
         logger.exception(
             f"Request ID: {request_id} - Error while saving feedback"
         )
-        raise HTTPException(status_code=500, detail=str(error))
+        raise HTTPException(status_code = 500, detail = str(error))
     
-@router.get("/feedback/summary", response_model = FeedbackSummaryResponse, tags=["Feedback"])
+@router.get("/feedback/summary", response_model = FeedbackSummaryResponse, tags = ["Feedback"])
 def feedback_summary(http_request: Request):
     request_id = http_request.state.request_id
 
@@ -211,9 +211,9 @@ def feedback_summary(http_request: Request):
         logger.exception(
             f"Request ID: {request_id} - Error while generating feedback summary"
         )
-        raise HTTPException(status_code=500, detail=str(error))
+        raise HTTPException(status_code = 500, detail = str(error))
 
-@router.post("/knowledge-base/re-build", response_model = BuildKnowledgeBaseResponse, tags = ['RAG'])
+@router.post("/knowledge-base/re-build", response_model = BuildKnowledgeBaseResponse, tags = ["RAG"])
 def rebuild_knowledge_base(http_request: Request):
     request_id = http_request.state.request_id
 
@@ -235,7 +235,7 @@ def rebuild_knowledge_base(http_request: Request):
         logger.exception(
             f"Request ID: {request_id} - Error while rebuilding knowledge base: {str(error)}"
         )
-        raise HTTPException(status_code=500, detail=str(error))
+        raise HTTPException(status_code = 500, detail = str(error))
     
 @router.get("/debug/feedback", tags = ["debug"])
 def get_all_feedback(http_request: Request):
@@ -266,10 +266,10 @@ def get_all_feedback(http_request: Request):
         }
 
     except Exception as error:
-        logger.exception("[request_id=%s] Error fetching debug feedback", request_id)
-        raise HTTPException(status_code=500, detail=str(error))
+        logger.exception(f"Request ID: {request_id} - Error fetching debug feedback")
+        raise HTTPException(status_code = 500, detail = str(error))
 
-@router.get("/debug/chat-logs", tags=["debug"])
+@router.get("/debug/chat-logs", tags = ["debug"])
 def get_chat_logs(http_request: Request):
     request_id = http_request.state.request_id
 
@@ -299,5 +299,5 @@ def get_chat_logs(http_request: Request):
         }
 
     except Exception as error:
-        logger.exception("[request_id=%s] Error fetching chat logs", request_id)
-        raise HTTPException(status_code=500, detail=str(error))
+        logger.exception(f"Request ID: {request_id} - Error fetching chat logs")
+        raise HTTPException(status_code = 500, detail = str(error)) 

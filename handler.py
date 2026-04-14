@@ -17,9 +17,9 @@ SYSTEM_PROMPTS = {
 
 RESPONSE_PROMPT = ChatPromptTemplate.from_template(
         "{system_prompt}\n\n"
-        "Chat_History:\n{chat_history}\n\n"
-        "User_Input: {user_input}\n"
-        "Assistant:"
+        "Chat History: \n{chat_history}\n\n"
+        "User: {user_input}\n"
+        "Assistant: "
 )
 
 output_parser = StrOutputParser()
