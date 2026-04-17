@@ -47,6 +47,7 @@ class ChatService:
             "rag_used": False,
             "bot_response": "",
             "evaluation": {},
+            "evaluation_reason": "",
             "retry_count": 0
         }
 
@@ -57,6 +58,8 @@ class ChatService:
         rag_used = final_state["rag_used"]
         bot_response = final_state["bot_response"]
         evaluation_result = final_state["evaluation"]
+        retry_count = final_state["retry_count"]
+        retry_happened = retry_count > 0
 
         logger.info(
             f"Request ID: {request_id} flow = graph_done Session: {session_id} intent: {intent} rag_used: {rag_used} response_length: {len(bot_response)}"
@@ -131,5 +134,7 @@ class ChatService:
         if debug or self.debug:
             ChatService_result["retrieved_chunks"] = retrieved_chunks
             ChatService_result["evaluation"] = evaluation_result
+            ChatService_result["retry_count"] = retry_count
+            ChatService_result["retry_happened"] = retry_happened
 
         return ChatService_result

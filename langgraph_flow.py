@@ -17,6 +17,7 @@ class GraphState(TypedDict):
     rag_used: bool
     bot_response: str
     evaluation: dict[str, str]
+    evaluation_reason: str
     retry_count: int
 
 def classify_node(state: GraphState) -> GraphState:
@@ -63,7 +64,9 @@ def generate_node(state: GraphState) -> GraphState:
     bot_response = handler(
         state["user_input"],
         state["chat_history"],
-        retrieved_chunks = state["retrieved_chunks"]
+        retrieved_chunks = state["retrieved_chunks"],
+        retry_reason = state.get("evaluation_reason", ""),
+        retry_count = state["retry_count"]
     )
 
     state["bot_response"] = bot_response
@@ -85,9 +88,10 @@ def evaluate_node(state: GraphState) -> GraphState:
     )
 
     state["evaluation"] = evaluation_result
+    state["evaluation_reason"] = evaluation_result.get("reason", "").strip()
     
     logger.info(
-        f"graph_node = evaluate_done score: {evaluation_result['score']} reason: {evaluation_result['reason']}"
+        f"graph_node = evaluate_done score: {evaluation_result['score']} reason: {state['evaluation_reason']}"
     )
     return state
 
@@ -95,7 +99,7 @@ def prepare_retry_node(state: GraphState) -> GraphState:
     state["retry_count"] += 1
 
     logger.info(
-        f"graph_node = prepare_retry retry_count: {state['retry_count']}"
+        f"graph_node = prepare_retry retry_count: {state['retry_count']} reason: {state.get('evaluation_reason', '')}"
     )
     return state
 
