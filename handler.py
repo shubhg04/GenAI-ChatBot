@@ -68,12 +68,6 @@ def generate_response(system_prompt, user_input, chat_history, use_history = Tru
         "chat_history": history_text,
         "user_input": user_input
     })
-    if use_history:
-        chat_history.append({"role": "user", "content": user_input})
-        chat_history.append({"role": "assistant", "content": bot_response})
-    
-    if len(chat_history) > 21:
-        chat_history[:] = [chat_history[0]] + chat_history[-20:]
     
     return bot_response
 

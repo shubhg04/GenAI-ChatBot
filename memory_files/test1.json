@@ -5,26 +5,10 @@
   },
   {
     "role": "user",
-    "content": "hello my name is bobby"
+    "content": "who is bob and where does he live"
   },
   {
     "role": "assistant",
-    "content": "Hello Bobby, nice to meet you. Is there something I can help you with today?"
-  },
-  {
-    "role": "user",
-    "content": "what is rag"
-  },
-  {
-    "role": "assistant",
-    "content": "RAG stands for Retrieval-Augmented Generation. It's a technology that helps improve chatbot answers by first retrieving relevant information from a knowledge source and then using that information to generate a final response. This way, the chatbot can provide more accurate and detailed answers to your questions."
-  },
-  {
-    "role": "user",
-    "content": "what is my name, i am 22 years old"
-  },
-  {
-    "role": "assistant",
-    "content": "You told me earlier that your name is Bobby, and you're 22 years old."
+    "content": "Unfortunately, I don't have any information about a person named Bob in our previous conversation. This is the start of our conversation, and I don't have any context about Bob. If you'd like to share more about Bob, I'd be happy to try and help you find the information you're looking for."
   }
 ]

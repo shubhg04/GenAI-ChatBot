@@ -34,7 +34,7 @@ class ChatService:
         )
 
         logger.info(
-            f"Request ID: {request_id} flow=graph_start Session: {session_id}"
+            f"Request ID: {request_id} flow = graph_start Session: {session_id}"
         )
 
         initial_state = {
@@ -46,7 +46,8 @@ class ChatService:
             "retrieved_chunks": [],
             "rag_used": False,
             "bot_response": "",
-            "evaluation": {}
+            "evaluation": {},
+            "retry_count": 0
         }
 
         final_state = self.graph.invoke(initial_state)
@@ -58,19 +59,42 @@ class ChatService:
         evaluation_result = final_state["evaluation"]
 
         logger.info(
-            f"Request ID: {request_id} flow=graph_done Session: {session_id} intent: {intent} rag_used: {rag_used} response_length: {len(bot_response)}"
+            f"Request ID: {request_id} flow = graph_done Session: {session_id} intent: {intent} rag_used: {rag_used} response_length: {len(bot_response)}"
         )
 
         logger.info(
-            f"Request ID: {request_id} flow = memory_save_start Session: {session_id}"
+            f"Request ID: {request_id} flow = memory_update_start Session: {session_id}"
         )
 
-        self.memory.save(chat_history)
+        save_to_memory = True
 
-        logger.info(
-            f"Request ID: {request_id} flow = memory_save_done Session: {session_id} "
-            f"history_messages: {len(chat_history)}"
-        )
+        if save_to_memory:
+            chat_history.append({"role": "user", "content": clean_input})
+            chat_history.append({"role": "assistant", "content": bot_response})
+
+            if len(chat_history) > 21:
+                chat_history[:] = [chat_history[0]] + chat_history[-20:]   
+
+            logger.info(
+                f"Request ID: {request_id} flow = memory_update_done Session: {session_id} "
+                f"history_messages: {len(chat_history)}"
+            ) 
+
+            logger.info(
+                f"Request ID: {request_id} flow = memory_save_start Session: {session_id}"
+            )        
+
+            self.memory.save(chat_history)
+
+            logger.info(
+                f"Request ID: {request_id} flow = memory_save_done Session: {session_id} "
+                f"history_messages: {len(chat_history)}"
+            )
+
+        else:
+            logger.info(
+                f"Request ID: {request_id} memory_save_skipped Session: {session_id}"
+            )
 
         logger.info(
             f"Request ID: {request_id} flow = db_save_start Session: {session_id} "

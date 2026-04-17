@@ -18,7 +18,8 @@ def main():
         "retrieved_chunks": [],
         "rag_used": False,
         "bot_response": "",
-        "evaluation": {}
+        "evaluation": {},
+        "retry_count": 0
     }
 
     final_state = graph.invoke(initial_state)

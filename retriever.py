@@ -24,7 +24,7 @@ class FAISSRetriever:
 
         with open(RAG_METADATA_FILE, "r", encoding="utf-8") as file:
             metadata = json.load(file)
-        logger.warning(f"Retriever metadata loaded successfully | metadata_count: {len(metadata)}")
+        logger.info(f"Retriever metadata loaded successfully | metadata_count: {len(metadata)}")
         return metadata
     
     def load_index(self):

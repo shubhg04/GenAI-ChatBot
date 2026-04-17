@@ -5,18 +5,10 @@
   },
   {
     "role": "user",
-    "content": "My name is Don"
+    "content": "who is amit and what does he do"
   },
   {
     "role": "assistant",
-    "content": "Hello Don, it's nice to meet you. Is there something I can help you with today?"
-  },
-  {
-    "role": "user",
-    "content": "Tell me about RAG"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello Don, I'd be happy to tell you about RAG. RAG stands for Retrieval-Augmented Generation, which is a technology that helps improve chatbot answers by first searching for relevant information in a knowledge source and then using that information to generate a more accurate and detailed response. This approach allows chatbots like myself to provide more informed and helpful answers to your questions."
+    "content": "Unfortunately, I don't have any information about a person named Amit from our previous conversation. Could you please provide more context or information about who Amit is or what you would like to know about him? This will help me provide a more accurate and helpful response."
   }
 ]

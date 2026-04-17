@@ -17,10 +17,11 @@ class GraphState(TypedDict):
     rag_used: bool
     bot_response: str
     evaluation: dict[str, str]
+    retry_count: int
 
 def classify_node(state: GraphState) -> GraphState:
     logger.info(
-        f"graph_node = classify_start input_length: {len(state['user_input'])} "
+        f"graph_node = classify_start input_length: {len(state['user_input'])}"
     )
     intent = classify_intent(state["user_input"])
     state["intent"] = intent
@@ -54,7 +55,7 @@ def retrieve_node(state: GraphState) -> GraphState:
 
 def generate_node(state: GraphState) -> GraphState:
     logger.info(
-        f"graph_node = generate_start intent: {state['intent']} rag_used: {state['rag_used']}"
+        f"graph_node = generate_start intent: {state['intent']} rag_used: {state['rag_used']} retry_count: {state['retry_count']}"
     )
     intent = state["intent"]
     handler = handlers.get(intent, handlers["chat"])
@@ -68,13 +69,13 @@ def generate_node(state: GraphState) -> GraphState:
     state["bot_response"] = bot_response
 
     logger.info(
-        f"graph_node = generate_done response_length: {len(bot_response)}"
+        f"graph_node = generate_done response_length: {len(bot_response)} retry_count: {state['retry_count']}"
     )
     return state
 
 def evaluate_node(state: GraphState) -> GraphState:
     logger.info(
-        "graph_node = evaluate_start"
+        f"graph_node = evaluate_start retry_count: {state['retry_count']}"
     )
     evaluator = ResponseEvaluator()
 
@@ -90,6 +91,34 @@ def evaluate_node(state: GraphState) -> GraphState:
     )
     return state
 
+def prepare_retry_node(state: GraphState) -> GraphState:
+    state["retry_count"] += 1
+
+    logger.info(
+        f"graph_node = prepare_retry retry_count: {state['retry_count']}"
+    )
+    return state
+
+def route_after_evaluation(state: GraphState) -> str:
+    score = state["evaluation"].get("score", "incorrect")
+
+    if score == "correct":
+        logger.info(
+            f"graph_route = finish reason = score_correct retry_count: {state['retry_count']}"
+        )
+        return "end"
+
+    if state["retry_count"] >= 1:
+        logger.info(
+            f"graph_route = finish reason = retry_limit_reached score: {score} retry_count: {state['retry_count']}"
+        )
+        return "end"
+   
+    logger.info(
+        f"graph_route = retry score: {score} retry_count: {state['retry_count']}"
+    )
+    return "prepare_retry"
+
 def build_langgraph_flow():
     graph_builder = StateGraph(GraphState)
 
@@ -97,12 +126,20 @@ def build_langgraph_flow():
     graph_builder.add_node("retrieve", retrieve_node)
     graph_builder.add_node("generate", generate_node)
     graph_builder.add_node("evaluate", evaluate_node)
+    graph_builder.add_node("prepare_retry", prepare_retry_node)
 
     graph_builder.set_entry_point("classify")
 
     graph_builder.add_edge("classify", "retrieve")
     graph_builder.add_edge("retrieve", "generate")
     graph_builder.add_edge("generate", "evaluate")
-    graph_builder.add_edge("evaluate", END)
-
+    graph_builder.add_edge("prepare_retry", "generate")
+    graph_builder.add_conditional_edges(
+        "evaluate",
+        route_after_evaluation,
+        {
+            "prepare_retry": "prepare_retry",
+            "end": END
+        }
+    )
     return graph_builder.compile()
