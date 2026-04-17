@@ -91,7 +91,7 @@ def evaluate_node(state: GraphState) -> GraphState:
     state["evaluation_reason"] = evaluation_result.get("reason", "").strip()
     
     logger.info(
-        f"graph_node = evaluate_done score: {evaluation_result['score']} reason: {state['evaluation_reason']}"
+        f"graph_node = evaluate_done score: {evaluation_result['score']} reason: {state['evaluation_reason']} retry_count: {state['retry_count']}"
     )
     return state
 
