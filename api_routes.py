@@ -25,7 +25,7 @@ def home():
 def health_check():
     return {"status": "ok"}
 
-@router.post("/chat", response_model = ChatResponse, tags = ["Chat"])
+@router.post("/chat", response_model = ChatResponse, response_model_exclude_none = True, tags = ["Chat"])
 def chat(request: ChatRequest, http_request: Request):
     request_id = http_request.state.request_id
     try:
@@ -73,7 +73,7 @@ def chat(request: ChatRequest, http_request: Request):
         logger.exception(f"Request ID: {request_id} - endpoint = /chat stage = unexpected_error")
         raise HTTPException(status_code = 500, detail = str(error))
     
-@router.post("/chat-form", response_model = ChatResponse, tags = ["Chat"])
+@router.post("/chat-form", response_model = ChatResponse, response_model_exclude_none = True, tags = ["Chat"])
 def chat_form(
     http_request: Request,
     user_input: str = Form(...),

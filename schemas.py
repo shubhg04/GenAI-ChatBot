@@ -24,6 +24,8 @@ class ChatResponse(BaseModel):
     rag_used: bool
     retrieved_chunks: list[RetrievedChunk] | None = None
     evaluation: EvaluationResult | None = None
+    retry_count: int | None = None
+    retry_happened: bool | None = None
 
 
 class ResetRequest(BaseModel):
