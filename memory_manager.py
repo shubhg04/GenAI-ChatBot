@@ -66,8 +66,11 @@ class MemoryManager:
             f"message_count: {len(chat_history)}"
         )
         
-        with open(self.file_path, "w") as f:
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+
+        with open(self.file_path, "w", encoding = "utf-8") as f:
             json.dump(chat_history, f, indent=2)
+        
         logger.info(
             f"memory_stage = save_done file_path: {self.file_path} "
             f"message_count: {len(chat_history)}"

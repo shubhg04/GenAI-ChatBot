@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-multipart
+langchain
+langchain-groq
+langgraph
+groq
+sentence-transformers
+faiss-cpu
+numpy
+pydantic
+transformers
+torch
