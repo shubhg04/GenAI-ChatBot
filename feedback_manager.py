@@ -34,29 +34,29 @@ class FeedbackManager:
             cursor.execute("SELECT COUNT(*) FROM feedback")
             total_feedback = cursor.fetchone()[0]
 
-        if total_feedback == 0:
-            return {
-                "total_feedback": 0,
-                "average_rating": 0,
-                "ratings_count": {
-                    "1": 0,
-                    "2": 0,
-                    "3": 0,
-                    "4": 0,
-                    "5": 0
+            if total_feedback == 0:
+                return {
+                    "total_feedback": 0,
+                    "average_rating": 0,
+                    "ratings_count": {
+                        "1": 0,
+                        "2": 0,
+                        "3": 0,
+                        "4": 0,
+                        "5": 0
+                    }
                 }
-            }
-        
-        cursor.execute("SELECT AVG(rating) FROM feedback")
-        average_rating = round(cursor.fetchone()[0], 2)
-
-        cursor.execute("""
-                SELECT rating, COUNT(*) 
-                FROM feedback 
-                GROUP BY rating
-            """)
             
-        rows = cursor.fetchall()
+            cursor.execute("SELECT AVG(rating) FROM feedback")
+            average_rating = round(cursor.fetchone()[0], 2)
+
+            cursor.execute("""
+                    SELECT rating, COUNT(*) 
+                    FROM feedback 
+                    GROUP BY rating
+                """)
+                
+            rows = cursor.fetchall()
 
         ratings_count = {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
 

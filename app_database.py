@@ -4,7 +4,6 @@ from pathlib import Path
 
 DATABASE_FILE = "app_data.db"
 
-
 def get_connection():
     connection = sqlite3.connect(DATABASE_FILE)
     connection.row_factory = sqlite3.Row
@@ -37,6 +36,16 @@ def initialize_database():
                 bot_response TEXT NOT NULL,
                 intent TEXT NOT NULL,
                 rag_used INTEGER NOT NULL
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS session_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT NOT NULL
             )
         """)
 
