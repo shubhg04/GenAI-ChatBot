@@ -84,7 +84,8 @@ def evaluate_node(state: GraphState) -> GraphState:
 
     evaluation_result = evaluator.evaluate(
         user_input = state["user_input"],
-        bot_response = state["bot_response"]
+        bot_response = state["bot_response"],
+        chat_history = state["chat_history"]
     )
 
     state["evaluation"] = evaluation_result

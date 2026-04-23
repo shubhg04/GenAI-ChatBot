@@ -1,8 +1,8 @@
 import sqlite3
 from pathlib import Path
 
-
-DATABASE_FILE = "app_data.db"
+DATA_DIR = Path("data")
+DATABASE_FILE = DATA_DIR / "app_data.db"
 
 def get_connection():
     connection = sqlite3.connect(DATABASE_FILE)
@@ -11,6 +11,7 @@ def get_connection():
 
 
 def initialize_database():
+    DATA_DIR.mkdir(parents = True, exist_ok = True)
     Path(DATABASE_FILE).touch(exist_ok=True)
 
     with get_connection() as connection:

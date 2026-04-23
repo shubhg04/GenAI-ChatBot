@@ -13,19 +13,31 @@ evaluator_llm = ChatGroq(
 
 EVALUATION_PROMPT = ChatPromptTemplate.from_messages([
     ("system", evaluation_prompt),
-    ("user", "User Input:\n{user_input}\n\nBot Response:\n{bot_response}")
+    ("user", "User Input:\n{user_input}\n\nChat History:\n{chat_history}\n\nBot Response:\n{bot_response}")
 ])
 
 evaluation_parser = StrOutputParser()
 
 evaluation_chain = EVALUATION_PROMPT | evaluator_llm | evaluation_parser
 
+def build_history_text(chat_history):
+    if not chat_history:
+        return ""
+    
+    history_lines = []
+    for message in chat_history:
+        history_lines.append(f"{message['role']}: {message['content']}")
+
+    return "\n".join(history_lines)
 
 class ResponseEvaluator:
-    def evaluate(self, user_input, bot_response):
+    def evaluate(self, user_input, bot_response, chat_history = None):
+        history_text = build_history_text(chat_history or [])
+
         try:
             raw_output = evaluation_chain.invoke({
                 "user_input": user_input,
+                "chat_history": history_text,
                 "bot_response": bot_response
             }).strip()
 
