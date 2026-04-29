@@ -54,3 +54,16 @@ class BuildKnowledgeBaseResponse(BaseModel):
     skipped_documents: int
     total_chunks: int
     knowledge_file: str
+
+class UploadedDocumentChunk(BaseModel):
+    id: str
+    title: str
+    content: str
+
+class UploadPDFResponse(BaseModel):
+    message: str
+    filename: str
+    document_id: str
+    total_characters: int
+    total_chunks: int
+    chunks: list[UploadedDocumentChunk]

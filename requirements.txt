@@ -11,3 +11,4 @@ numpy
 pydantic
 transformers
 torch
+pypdf
