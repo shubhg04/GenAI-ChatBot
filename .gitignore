@@ -6,3 +6,4 @@ __pycache__/
 graphify-out/
 CLAUDE.md
 .venv
+.DS_Store
