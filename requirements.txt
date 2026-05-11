@@ -10,3 +10,5 @@ faiss-cpu
 numpy
 pydantic
 pypdf
+streamlit
+requests
