@@ -1,4 +1,4 @@
-from config import MODEL_NAME, classifier_prompt
+from config import MODEL_NAME, CLASSIFIER_SYSTEM_PROMPT
 from handler import handle_chat, handle_email, handle_summarize, handle_code
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
@@ -10,7 +10,7 @@ classifier_llm = ChatGroq(
 )
 
 CLASSIFIER_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", classifier_prompt),
+    ("system", CLASSIFIER_SYSTEM_PROMPT),
     ("user", "{user_input}")
 ])
 

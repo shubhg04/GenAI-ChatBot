@@ -11,7 +11,7 @@ RAG_SIMILARITY_THRESHOLD = 0.2
 RAG_CHUNK_SIZE = 800
 RAG_CHUNK_OVERLAP = 120
 
-classifier_prompt = """
+CLASSIFIER_SYSTEM_PROMPT = """
 You are a strict intent classifier.
 
 Classify the user's message into exactly one of these labels only:
@@ -37,7 +37,7 @@ Classification rules:
 - When unsure, output chat
 """
 
-evaluation_prompt = """
+EVALUATOR_SYSTEM_PROMPT = """
 You are a strict response evaluator.
 
 You will be given:

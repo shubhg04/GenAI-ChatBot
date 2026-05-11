@@ -3,7 +3,7 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-llm = ChatGroq(
+handler_llm = ChatGroq(
     model = MODEL_NAME,
     temperature = 0.2
 )
@@ -77,7 +77,7 @@ def generate_response(system_prompt,
 
     history_text = build_history_text(chat_history, use_history = use_history)
 
-    chain = RESPONSE_PROMPT | llm | output_parser
+    chain = RESPONSE_PROMPT | handler_llm | output_parser
 
     bot_response = chain.invoke({
         "system_prompt": final_system_prompt,

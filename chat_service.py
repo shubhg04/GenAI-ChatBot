@@ -123,7 +123,7 @@ class ChatService:
             f"intent: {intent} rag_used: {rag_used} response_length: {len(bot_response)}"
         )
 
-        ChatService_result = {
+        result = {
             "user_input": clean_input,
             "bot_response": bot_response,
             "intent": intent,
@@ -132,9 +132,9 @@ class ChatService:
         }
 
         if debug or self.debug:
-            ChatService_result["retrieved_chunks"] = retrieved_chunks
-            ChatService_result["evaluation"] = evaluation_result
-            ChatService_result["retry_count"] = retry_count
-            ChatService_result["retry_happened"] = retry_happened
+            result["retrieved_chunks"] = retrieved_chunks
+            result["evaluation"] = evaluation_result
+            result["retry_count"] = retry_count
+            result["retry_happened"] = retry_happened
 
-        return ChatService_result
+        return result

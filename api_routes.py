@@ -46,8 +46,8 @@ def chat(request: ChatRequest, http_request: Request):
             f"Session: {request.session_id}"
         )
 
-        ChatService_Result = service.process(
-            request.user_input, 
+        result = service.process(
+            request.user_input,
             request.session_id,
             request_id,
             use_rag = request.use_rag,
@@ -56,16 +56,16 @@ def chat(request: ChatRequest, http_request: Request):
 
         logger.info(
             f"Request ID: {request_id} - endpoint = /chat stage = service_call_done "
-            f"Session: {request.session_id} intent: {ChatService_Result['intent']} "
-            f"rag_used: {ChatService_Result['rag_used']} response_length: {len(ChatService_Result['bot_response'])}"
+            f"Session: {request.session_id} intent: {result['intent']} "
+            f"rag_used: {result['rag_used']} response_length: {len(result['bot_response'])}"
         )
-        
+
         logger.info(
             f"Request ID: {request_id} - endpoint = /chat stage = response_sent "
             f"Session: {request.session_id}"
         )
 
-        return ChatService_Result
+        return result
     
     except ValueError as ve:
         logger.exception(f"Request ID: {request_id} - endpoint = /chat stage = validation_error")
@@ -100,7 +100,7 @@ def chat_form(
             f"Session: {session_id}"
         )
 
-        ChatService_Result = service.process(
+        result = service.process(
             user_input,
             session_id,
             request_id,
@@ -110,16 +110,16 @@ def chat_form(
 
         logger.info(
             f"Request ID: {request_id} - endpoint = /chat-form stage = service_call_done "
-            f"Session: {session_id} intent: {ChatService_Result['intent']} "
-            f"rag_used: {ChatService_Result['rag_used']} response_length: {len(ChatService_Result['bot_response'])}"
+            f"Session: {session_id} intent: {result['intent']} "
+            f"rag_used: {result['rag_used']} response_length: {len(result['bot_response'])}"
         )
-        
+
         logger.info(
             f"Request ID: {request_id} - endpoint = /chat-form stage = response_sent "
             f"Session: {session_id}"
         )
 
-        return ChatService_Result
+        return result
 
     except ValueError as ve:
         logger.exception(f"Request ID: {request_id} - endpoint = /chat-form stage = validation_error")

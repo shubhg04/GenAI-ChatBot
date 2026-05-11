@@ -38,11 +38,11 @@ class ChatBot:
                 continue
             
             request_id = str(uuid.uuid4())
-            ChatService_Result = self.service.process(user_input, "cli-session" , request_id)
+            result = self.service.process(user_input, "cli-session", request_id)
 
-            print("Bot:", ChatService_Result["bot_response"])
+            print("Bot:", result["bot_response"])
             if not self.debug:
-                print("Intent:", ChatService_Result["intent"])
+                print("Intent:", result["intent"])
 
 def main(debug = False):
     bot = ChatBot(debug)

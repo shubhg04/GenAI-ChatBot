@@ -1,5 +1,5 @@
 import logging
-from config import EVALUATOR_MODEL_NAME, evaluation_prompt
+from config import EVALUATOR_MODEL_NAME, EVALUATOR_SYSTEM_PROMPT
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -12,7 +12,7 @@ evaluator_llm = ChatGroq(
 )
 
 EVALUATION_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", evaluation_prompt),
+    ("system", EVALUATOR_SYSTEM_PROMPT),
     ("user", "User Input:\n{user_input}\n\nChat History:\n{chat_history}\n\nBot Response:\n{bot_response}")
 ])
 
