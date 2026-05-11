@@ -15,7 +15,7 @@ def extract_text_from_pdf(file) -> str:
     return "\n".join(pages_text).strip()
 
 
-def ingest_pdf_file(file, original_filename: str) -> dict:
+def ingest_pdf_file(file, original_filename: str, retriever) -> dict:
     extracted_text = extract_text_from_pdf(file)
 
     if not extracted_text:
@@ -29,9 +29,15 @@ def ingest_pdf_file(file, original_filename: str) -> dict:
 
     chunks = build_chunks_from_document(document)
 
+    if not chunks:
+        raise ValueError("No chunks could be created from the uploaded PDF.")
+    
+    retriever_result = retriever.add_chunks(chunks)
+    
     return {
         "document": document,
         "chunks": chunks,
         "total_characters": len(extracted_text),
-        "total_chunks": len(chunks)
+        "total_chunks": len(chunks),
+        "added_chunks": retriever_result["added_chunks"]
     }

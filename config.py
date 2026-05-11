@@ -1,11 +1,15 @@
 MODEL_NAME = "llama-3.1-8b-instant"
 EVALUATOR_MODEL_NAME = "llama-3.1-8b-instant"
-
-RAG_METADATA_FILE = "knowledge_metadata.json"
-FAISS_INDEX_FILE = "knowledge.index"
-RAG_TOP_K = 3
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
-RAG_SIMILARITY_THRESHOLD = 0.3
+
+RAG_METADATA_FILE = "data/knowledge_metadata.json"
+FAISS_INDEX_FILE = "data/knowledge.index"
+
+RAG_TOP_K = 5
+RAG_SIMILARITY_THRESHOLD = 0.2
+
+RAG_CHUNK_SIZE = 800
+RAG_CHUNK_OVERLAP = 120
 
 classifier_prompt = """
 You are a strict intent classifier.

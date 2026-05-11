@@ -7,8 +7,13 @@ WORKDIR /app
 # Copy requirements first (for caching)
 COPY requirements.txt .
 
+# Upgrade pip
+# Install CPU-only PyTorch first, then the rest
+# Prevents sentence-transformers from pulling ~2GB of CUDA libs
 # Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+ && pip install --no-cache-dir -r requirements.txt
 
 # Copy entire project
 COPY . .

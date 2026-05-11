@@ -9,8 +9,8 @@ llm = ChatGroq(
 )
 
 SYSTEM_PROMPTS = {
-    "chat": "You are a helpful assistant. Use previous conversation context when relevant.",
-    "summarize": "You summarize text clearly and concisely. Use previous context if the user is referring to earlier text.",
+    "chat": "You are a helpful assistant with access to a knowledge base that may include user-uploaded documents. When a user asks about a document or uploaded file, use the retrieved context — it contains content extracted from that document. Use previous conversation context when relevant.",
+    "summarize": "You summarize text clearly and concisely. If the user asks to summarize an uploaded document, use the retrieved context which contains the document's content. Use previous context if the user is referring to earlier text.",
     "email": "You are a professional email writer. If the user is refining a previously written email, use conversation context.",
     "code": "You help debug and explain code clearly. Use previous conversation context if the user is referring to earlier code."
 }
@@ -40,11 +40,11 @@ def build_rag_prompt(base_prompt, retrieved_chunks):
 
     return (
         f"{base_prompt}\n\n"
-        f"Use the retrieved context below only if it is clearly relevant to the user's question.\n"
+        f"The following context was retrieved from the knowledge base, which may include user-uploaded documents (PDFs and files).\n"
+        f"Use this context to answer the user's question — if the user is asking about a document or uploaded file, this context contains its content.\n"
         f"If the context helps, use it to answer more accurately.\n"
-        f"If the context is incomplete or not relevant, do not force it into the answer.\n"
-        f"Answer normally if the retrieved context does not help.\n"
-        f"Explain in your own words and do not copy the context word-for-word unless the user asks for an exact quote.\n\n"
+        f"If the context is genuinely unrelated to the question, you may answer from general knowledge instead.\n"
+        f"Synthesize the information in your own words; do not copy verbatim unless the user asks for an exact quote.\n\n"
         f"Retrieved Context:\n{joined_context}"
     )
     

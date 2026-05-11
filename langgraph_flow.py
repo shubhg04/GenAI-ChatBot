@@ -4,6 +4,7 @@ from langgraph.graph import StateGraph, END
 from routing import classify_intent, handlers
 from response_evaluator import ResponseEvaluator
 from config import RAG_TOP_K
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,28 @@ def classify_node(state: GraphState) -> GraphState:
     )
     return state
 
+def build_retrieval_query(user_input: str) -> str:
+    cleaned_input = user_input.strip().lower()
+
+    filler_patterns = [
+        r"\bhi\b",
+        r"\bhello\b",
+        r"\bhey\b",
+        r"\bplease\b",
+        r"\bthanks\b",
+        r"\bthank you\b",
+        r"\bcan you tell me\b",
+        r"\bcould you tell me\b",
+        r"\btell me\b"
+    ]
+
+    for pattern in filler_patterns:
+        cleaned_input = re.sub(pattern, " ", cleaned_input)
+
+    cleaned_input = re.sub(r"\s+", " ", cleaned_input).strip()
+
+    return cleaned_input or user_input.strip()
+
 def retrieve_node(state: GraphState) -> GraphState:
     logger.info(
         f"graph_node = retrieve_start use_rag: {state['use_rag']}"
@@ -40,10 +63,17 @@ def retrieve_node(state: GraphState) -> GraphState:
     rag_used = False
 
     if state["use_rag"]:
-        retrieved_chunks = state["retriever"].retrieve(
-            state["user_input"],
-            top_k = RAG_TOP_K
+        retrieval_query = build_retrieval_query(state["user_input"])
+        
+        logger.info(
+            f"graph_node = retrieve_query_built original_input: {state['user_input']} retrieval_query: {retrieval_query}"
         )
+
+        retrieved_chunks = state["retriever"].retrieve(
+            retrieval_query,
+            top_k=RAG_TOP_K
+        )
+
         rag_used = len(retrieved_chunks) > 0
 
     state["retrieved_chunks"] = retrieved_chunks
@@ -55,6 +85,7 @@ def retrieve_node(state: GraphState) -> GraphState:
     return state
 
 def generate_node(state: GraphState) -> GraphState:
+
     logger.info(
         f"graph_node = generate_start intent: {state['intent']} rag_used: {state['rag_used']} retry_count: {state['retry_count']}"
     )

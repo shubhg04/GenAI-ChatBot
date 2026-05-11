@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, Form, UploadFile, File
-from dependencies import get_memory, build_chat_service, reload_retriever
+from dependencies import get_memory, build_chat_service, reload_retriever, get_retriever
 from feedback_manager import FeedbackManager
 from build_knowledge_base import build_knowledge_base
 from pdf_ingestion import ingest_pdf_file
@@ -252,10 +252,18 @@ async def upload_pdf(file: UploadFile = File(...), http_request: Request = None)
             raise HTTPException(status_code = 400, detail = "Only PDF files are allowed.")
         
         file.file.seek(0)
-        result = ingest_pdf_file(file.file, file.filename)
+
+        retriever = get_retriever()
+
+        result = ingest_pdf_file(file.file, file.filename, retriever)
+
+        reload_retriever()
 
         logger.info(
-            f"Request ID: {request_id} - endpoint = /upload-pdf stage = processing_done filename: {file.filename} total_characters: {result['total_characters']} total_chunks: {result['total_chunks']}"
+            f"Request ID: {request_id} - endpoint = /upload-pdf stage = processing_done "
+            f"filename: {file.filename} "
+            f"total_characters: {result['total_characters']} " f"total_chunks: {result['total_chunks']} "
+            f"added_chunks: {result['added_chunks']}"
         )
 
         return {
@@ -270,11 +278,11 @@ async def upload_pdf(file: UploadFile = File(...), http_request: Request = None)
     except HTTPException:
         raise
 
-    except ValueError as error:
+    except ValueError as ve:
         logger.exception(
             f"Request ID: {request_id} - endpoint = /upload-pdf stage = validation_error"
         )
-        raise HTTPException(status_code = 400, detail = str(error))
+        raise HTTPException(status_code = 400, detail = str(ve))
     
     except Exception as error:
         logger.exception(
@@ -283,7 +291,7 @@ async def upload_pdf(file: UploadFile = File(...), http_request: Request = None)
         raise HTTPException(status_code = 500, detail = str(error))
 
     
-@router.get("/debug/feedback", tags = ["debug"])
+@router.get("/debug/feedback", tags = ["Debug"])
 def get_all_feedback(http_request: Request):
     request_id = http_request.state.request_id
 
@@ -315,7 +323,7 @@ def get_all_feedback(http_request: Request):
         logger.exception(f"Request ID: {request_id} - Error fetching debug feedback")
         raise HTTPException(status_code = 500, detail = str(error))
 
-@router.get("/debug/chat-logs", tags = ["debug"])
+@router.get("/debug/chat-logs", tags = ["Debug"])
 def get_chat_logs(http_request: Request):
     request_id = http_request.state.request_id
 
