@@ -1,9 +1,25 @@
+# Python
 __pycache__/
 *.pyc
-.env
-.vscode/
 .venv/
+.venv
+
+# Environment
+.env
+
+# Editors
+.vscode/
+.DS_Store
+
+# Project-specific
 graphify-out/
 CLAUDE.md
-.venv
-.DS_Store
+
+# Database files
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# FAISS + RAG generated files
+*.index
