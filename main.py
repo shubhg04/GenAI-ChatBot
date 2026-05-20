@@ -14,12 +14,16 @@ from api_routes import router
 from middleware import request_logging_middleware
 from dependencies import initialize_retriever
 from app_database import initialize_database
+from auth import fastapi_users, auth_backend
+from schemas import UserRead, UserCreate, UserUpdate
+from database import verify_connection
 
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialize_database()
+    verify_connection()
     initialize_retriever()
     logger.info("Application startup completed successfully.")
     yield
@@ -34,3 +38,21 @@ app = FastAPI(
 app.middleware("http")(request_logging_middleware)
 
 app.include_router(router)
+
+app.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth",
+    tags=["Auth"]
+)
+
+app.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["Auth"]
+)
+
+app.include_router(
+    fastapi_users.get_users_router(UserRead, UserUpdate),
+    prefix="/users",
+    tags=["Users"]
+)

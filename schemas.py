@@ -1,4 +1,15 @@
 from pydantic import BaseModel, Field
+from fastapi_users import schemas as fu_schemas
+import uuid
+
+class UserRead(fu_schemas.BaseUser[uuid.UUID]):
+    pass
+
+class UserCreate(fu_schemas.BaseUserCreate):
+    pass
+
+class UserUpdate(fu_schemas.BaseUserUpdate):
+    pass
 
 class ChatRequest(BaseModel):
     user_input: str = Field(..., min_length=1)
