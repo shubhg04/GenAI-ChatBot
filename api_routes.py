@@ -1,3 +1,6 @@
+from auth import current_active_user
+from models import User
+from fastapi import Depends
 from fastapi import APIRouter, HTTPException, Request, Form, UploadFile, File
 from dependencies import get_memory, build_chat_service, reload_retriever, get_retriever
 from feedback_manager import FeedbackManager
@@ -28,17 +31,21 @@ def health_check():
     return {"status": "ok"}
 
 @router.post("/chat", response_model = ChatResponse, response_model_exclude_none = True, tags = ["Chat"])
-def chat(request: ChatRequest, http_request: Request):
+def chat(
+    request: ChatRequest,
+    http_request: Request, 
+    user: User = Depends(current_active_user)
+):
     request_id = http_request.state.request_id
     try:
         
         logger.info(
             f"Request ID: {request_id} - endpoint = /chat stage = request_received "
-            f"Session: {request.session_id} message_length: {len(request.user_input.strip())} "
+            f"user_id: {user.id} Session: {request.session_id} message_length: {len(request.user_input.strip())} "
             f"use_rag: {request.use_rag} debug: {request.debug}"
         )
         
-        memory = get_memory(request.session_id)
+        memory = get_memory(request.session_id, user.id)
         service = build_chat_service(memory)
         
         logger.info(
@@ -50,6 +57,7 @@ def chat(request: ChatRequest, http_request: Request):
             request.user_input,
             request.session_id,
             request_id,
+            user.id,
             use_rag = request.use_rag,
             debug = request.debug
         )
@@ -67,6 +75,10 @@ def chat(request: ChatRequest, http_request: Request):
 
         return result
     
+    except PermissionError as pe:
+        logger.warning(f"Request ID: {request_id} - endpoint = /chat stage = permission_denied user_id: {user.id} session_id: {request.session_id}")
+        raise HTTPException(status_code = 403, detail = str(pe))
+    
     except ValueError as ve:
         logger.exception(f"Request ID: {request_id} - endpoint = /chat stage = validation_error")
         raise HTTPException(status_code = 400, detail = str(ve))
@@ -81,18 +93,19 @@ def chat_form(
     user_input: str = Form(...),
     session_id: str = Form(...),
     use_rag: bool = Form(True),
-    debug: bool = Form(False)
+    debug: bool = Form(False),
+    user: User = Depends(current_active_user)
 ):
     request_id = http_request.state.request_id
 
     try:
         logger.info(
             f"Request ID: {request_id} - endpoint = /chat-form stage = request_received "
-            f"Session: {session_id} message_length: {len(user_input.strip())} "
+            f"user_id: {user.id} Session: {session_id} message_length: {len(user_input.strip())} "
             f"use_rag: {use_rag} debug: {debug}"
         )
 
-        memory = get_memory(session_id)
+        memory = get_memory(session_id, user.id)
         service = build_chat_service(memory)
         
         logger.info(
@@ -104,6 +117,7 @@ def chat_form(
             user_input,
             session_id,
             request_id,
+            user.id,
             use_rag = use_rag,
             debug = debug
         )
@@ -121,6 +135,10 @@ def chat_form(
 
         return result
 
+    except PermissionError as pe:
+        logger.warning(f"Request ID: {request_id} - endpoint = /chat-form stage = permission_denied user_id: {user.id} session_id: {session_id}")
+        raise HTTPException(status_code = 403, detail = str(pe))
+
     except ValueError as ve:
         logger.exception(f"Request ID: {request_id} - endpoint = /chat-form stage = validation_error")
         raise HTTPException(status_code = 400, detail = str(ve))
@@ -130,15 +148,19 @@ def chat_form(
         raise HTTPException(status_code = 500, detail = str(error))
 
 @router.post("/reset", response_model = ResetResponse, tags = ["Chat"])
-def reset(request: ResetRequest, http_request: Request):
+def reset(
+    request: ResetRequest, 
+    http_request: Request, 
+    user: User = Depends(current_active_user)
+):
     request_id = http_request.state.request_id
 
     try:
         logger.info(
-            f"Request ID: {request_id} - /reset called for session: {request.session_id}"
+            f"Request ID: {request_id} - /reset called for user_id: {user.id} session: {request.session_id}"
         )
 
-        memory = get_memory(request.session_id)
+        memory = get_memory(request.session_id, user.id)
         memory.clear()
 
         logger.info(
@@ -150,6 +172,10 @@ def reset(request: ResetRequest, http_request: Request):
             "session_id": request.session_id,
         }
     
+    except PermissionError as pe:
+        logger.warning(f"Request ID: {request_id} - endpoint = /reset stage = permission_denied user_id: {user.id} session_id: {request.session_id}")
+        raise HTTPException(status_code = 403, detail = str(pe))
+    
     except Exception as error:
         logger.exception(
             f"Request ID: {request_id} - Unexpected error in /reset"
@@ -157,13 +183,13 @@ def reset(request: ResetRequest, http_request: Request):
         raise HTTPException(status_code = 500, detail = str(error))
     
 @router.post("/feedback", tags = ["Feedback"])
-def submit_feedback(request: FeedbackRequest, http_request: Request):
+def submit_feedback(request: FeedbackRequest, http_request: Request, user: User = Depends(current_active_user)):
 
     request_id = http_request.state.request_id
 
     try:
         logger.info(
-            f"Request ID: {request_id} - Feedback received for session: {request.session_id} (request: {request.request_id})"
+            f"Request ID: {request_id} - Feedback received for user_id: {user.id} session: {request.session_id} (request: {request.request_id})"
         )
 
         feedback_manager = FeedbackManager()
@@ -175,7 +201,7 @@ def submit_feedback(request: FeedbackRequest, http_request: Request):
             comments = request.comments
         )
 
-        feedback_manager.save_feedback(entry)
+        feedback_manager.save_feedback(entry, user.id)
 
         logger.info(
             f"Request ID: {request_id} - Feedback saved successfully for target request: {request.request_id}"
@@ -185,6 +211,10 @@ def submit_feedback(request: FeedbackRequest, http_request: Request):
             "message": "Feedback submitted successfully",
         }
     
+    except PermissionError as pe:
+        logger.warning(f"Request ID: {request_id} - endpoint = /feedback stage = permission_denied user_id: {user.id} session_id: {request.session_id}")
+        raise HTTPException(status_code = 403, detail = str(pe))
+    
     except Exception as error:
         logger.exception(
             f"Request ID: {request_id} - Error while saving feedback"
@@ -192,16 +222,16 @@ def submit_feedback(request: FeedbackRequest, http_request: Request):
         raise HTTPException(status_code = 500, detail = str(error))
     
 @router.get("/feedback/summary", response_model = FeedbackSummaryResponse, tags = ["Feedback"])
-def feedback_summary(http_request: Request):
+def feedback_summary(http_request: Request, user: User = Depends(current_active_user)):
     request_id = http_request.state.request_id
 
     try:
         logger.info(
-            f"Request ID: {request_id} - Fetching feedback summary"
+            f"Request ID: {request_id} - Fetching feedback summary for user_id: {user.id}"
         )
 
         feedback_manager = FeedbackManager()
-        summary = feedback_manager.get_summary()
+        summary = feedback_manager.get_summary(user.id)
 
         logger.info(
             f"Request ID: {request_id} - Feedback summary generated successfully"
@@ -240,15 +270,15 @@ def rebuild_knowledge_base(http_request: Request):
         raise HTTPException(status_code = 500, detail = str(error))
     
 @router.post("/upload-pdf", response_model = UploadPDFResponse, tags = ["Documents"])
-async def upload_pdf(file: UploadFile = File(...), http_request: Request = None):
+async def upload_pdf(http_request: Request, file: UploadFile = File(...), user: User = Depends(current_active_user)):
     request_id = http_request.state.request_id
 
     try:
         logger.info(
-            f"Request ID: {request_id} - endpoint = /upload-pdf stage = request_received filename: {file.filename} content_type: {file.content_type}"
+            f"Request ID: {request_id} - endpoint = /upload-pdf stage = request_received user_id: {user.id} filename: {file.filename} content_type: {file.content_type}"
         )
 
-        if not file.filename.lower().endswith(".pdf"):
+        if not file.filename or not file.filename.lower().endswith(".pdf"):
             raise HTTPException(status_code = 400, detail = "Only PDF files are allowed.")
         
         file.file.seek(0)
@@ -261,7 +291,7 @@ async def upload_pdf(file: UploadFile = File(...), http_request: Request = None)
 
         logger.info(
             f"Request ID: {request_id} - endpoint = /upload-pdf stage = processing_done "
-            f"filename: {file.filename} "
+            f"user_id: {user.id} filename: {file.filename} "
             f"total_characters: {result['total_characters']} " f"total_chunks: {result['total_chunks']} "
             f"added_chunks: {result['added_chunks']}"
         )

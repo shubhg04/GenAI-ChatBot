@@ -9,8 +9,10 @@ logger = logging.getLogger(__name__)
 
 _retriever = None
 
-def get_memory(session_id: str):
-    return MemoryManager(session_id)
+from uuid import UUID
+
+def get_memory(session_id: str, user_id: UUID):
+    return MemoryManager(session_id, user_id)
 
 def initialize_retriever():
     global _retriever

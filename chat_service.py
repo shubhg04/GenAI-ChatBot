@@ -12,7 +12,7 @@ class ChatService:
         self.chat_log_repository = ChatLogRepository()
         self.graph = build_langgraph_flow()
 
-    def process(self, user_input, session_id, request_id, use_rag = True, debug = False):
+    def process(self, user_input, session_id, request_id, user_id, use_rag = True, debug = False):
         clean_input = user_input.strip()
         if not clean_input:
             raise ValueError("Your input cannot be empty.")
@@ -110,7 +110,8 @@ class ChatService:
             user_input = clean_input,
             bot_response = bot_response,
             intent = intent,
-            rag_used = rag_used
+            rag_used = rag_used,
+            user_id = user_id
         )
 
         logger.info(
