@@ -8,9 +8,12 @@ logging.basicConfig(
 from dotenv import load_dotenv
 load_dotenv()
 
+from redis_client import verify_redis_connection
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 from api_routes import router
+from auth_routes import router as auth_logout_router
 from middleware import request_logging_middleware
 from dependencies import initialize_retriever
 from app_database import initialize_database
@@ -24,6 +27,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     initialize_database()
     verify_connection()
+    verify_redis_connection()
     initialize_retriever()
     logger.info("Application startup completed successfully.")
     yield
@@ -35,9 +39,28 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    schema = get_openapi(title=app.title, version=app.version, routes=app.routes)
+    schema["components"]["securitySchemes"]["BearerAuth"] = {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+    }
+    for path in schema["paths"].values():
+        for method in path.values():
+            method.setdefault("security", []).append({"BearerAuth": []})
+    app.openapi_schema = schema
+    return schema
+
+app.openapi = custom_openapi
+
 app.middleware("http")(request_logging_middleware)
 
 app.include_router(router)
+
+app.include_router(auth_logout_router)
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
