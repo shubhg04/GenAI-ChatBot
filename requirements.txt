@@ -3,12 +3,15 @@ uvicorn[standard]
 python-multipart
 langchain
 langchain-groq
+langchain-community
 langgraph
+langgraph-checkpoint-postgres
 groq
 sentence-transformers
 faiss-cpu
 numpy
 pydantic
+pymupdf
 pypdf
 streamlit
 requests
@@ -19,3 +22,6 @@ python-dotenv
 fastapi-users[sqlalchemy]
 redis
 asyncpg
+qdrant-client
+cohere
+rank-bm25
