@@ -1,8 +1,10 @@
 import logging
+from uuid import UUID
 from typing import TypedDict, Any
 from langgraph.graph import StateGraph, END
 from routing import classify_intent, handlers
 from response_evaluator import ResponseEvaluator
+from langchain_memory_adapter import LangChainMemoryAdapter
 from config import RAG_TOP_K
 import re
 
@@ -10,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 class GraphState(TypedDict):
     user_input: str
-    chat_history: list[dict[str, str]]
+    session_id: str
+    user_id: UUID
     use_rag: bool
     retriever: Any
     intent: str
@@ -64,7 +67,7 @@ def retrieve_node(state: GraphState) -> GraphState:
 
     if state["use_rag"]:
         retrieval_query = build_retrieval_query(state["user_input"])
-        
+
         logger.info(
             f"graph_node = retrieve_query_built original_input: {state['user_input']} retrieval_query: {retrieval_query}"
         )
@@ -85,7 +88,6 @@ def retrieve_node(state: GraphState) -> GraphState:
     return state
 
 def generate_node(state: GraphState) -> GraphState:
-
     logger.info(
         f"graph_node = generate_start intent: {state['intent']} rag_used: {state['rag_used']} retry_count: {state['retry_count']}"
     )
@@ -94,10 +96,11 @@ def generate_node(state: GraphState) -> GraphState:
 
     bot_response = handler(
         state["user_input"],
-        state["chat_history"],
-        retrieved_chunks = state["retrieved_chunks"],
-        retry_reason = state.get("evaluation_reason", ""),
-        retry_count = state["retry_count"]
+        state["session_id"],
+        state["user_id"],
+        retrieved_chunks=state["retrieved_chunks"],
+        retry_reason=state.get("evaluation_reason", ""),
+        retry_count=state["retry_count"]
     )
 
     state["bot_response"] = bot_response
@@ -113,15 +116,28 @@ def evaluate_node(state: GraphState) -> GraphState:
     )
     evaluator = ResponseEvaluator()
 
+    adapter = LangChainMemoryAdapter(
+        session_id=state["session_id"],
+        user_id=state["user_id"]
+    )
+    history_messages = adapter.messages
+
+    chat_history_for_eval = []
+    for message in history_messages:
+        role_map = {"system": "system", "human": "user", "ai": "assistant"}
+        message_type = message.type
+        role = role_map.get(message_type, "user")
+        chat_history_for_eval.append({"role": role, "content": message.content})
+
     evaluation_result = evaluator.evaluate(
-        user_input = state["user_input"],
-        bot_response = state["bot_response"],
-        chat_history = state["chat_history"]
+        user_input=state["user_input"],
+        bot_response=state["bot_response"],
+        chat_history=chat_history_for_eval
     )
 
     state["evaluation"] = evaluation_result
     state["evaluation_reason"] = evaluation_result.get("reason", "").strip()
-    
+
     logger.info(
         f"graph_node = evaluate_done score: {evaluation_result['score']} reason: {state['evaluation_reason']} retry_count: {state['retry_count']}"
     )
@@ -149,7 +165,7 @@ def route_after_evaluation(state: GraphState) -> str:
             f"graph_route = finish reason = retry_limit_reached score: {score} retry_count: {state['retry_count']}"
         )
         return "end"
-   
+
     logger.info(
         f"graph_route = retry score: {score} retry_count: {state['retry_count']}"
     )
