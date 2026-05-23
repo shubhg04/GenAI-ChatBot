@@ -12,7 +12,6 @@ faiss-cpu
 numpy
 pydantic
 pymupdf
-pypdf
 streamlit
 requests
 sqlalchemy>=2.0

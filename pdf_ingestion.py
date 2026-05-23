@@ -1,24 +1,31 @@
 import uuid
-from pypdf import PdfReader
+from langchain_community.document_loaders import PyMuPDFLoader
 from build_knowledge_base import build_chunks_from_document
-
-
-def extract_text_from_pdf(file) -> str:
-    reader = PdfReader(file)
-    pages_text = []
-
-    for page in reader.pages:
-        page_text = page.extract_text() or ""
-        if page_text.strip():
-            pages_text.append(page_text.strip())
-
-    return "\n".join(pages_text).strip()
+import tempfile
+import os
 
 
 def ingest_pdf_file(file, original_filename: str, retriever) -> dict:
-    extracted_text = extract_text_from_pdf(file)
+    pdf_bytes = file.read()
 
-    if not extracted_text:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(pdf_bytes)
+        tmp_path = tmp.name
+
+    try:
+        loader = PyMuPDFLoader(tmp_path)
+        pages = loader.load()
+    finally:
+        os.remove(tmp_path)
+
+    if not pages:
+        raise ValueError("No extractable text found in the uploaded PDF.")
+
+    extracted_text = "\n".join(
+        page.page_content for page in pages if page.page_content.strip()
+    )
+
+    if not extracted_text.strip():
         raise ValueError("No extractable text found in the uploaded PDF.")
 
     document = {
@@ -31,9 +38,9 @@ def ingest_pdf_file(file, original_filename: str, retriever) -> dict:
 
     if not chunks:
         raise ValueError("No chunks could be created from the uploaded PDF.")
-    
+
     retriever_result = retriever.add_chunks(chunks)
-    
+
     return {
         "document": document,
         "chunks": chunks,
