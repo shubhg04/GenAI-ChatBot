@@ -15,12 +15,12 @@ from fastapi.openapi.utils import get_openapi
 from api_routes import router
 from auth_routes import router as auth_logout_router
 from middleware import request_logging_middleware
-from dependencies import initialize_retriever
 from app_database import initialize_database
 from auth import fastapi_users, auth_backend
 from schemas import UserRead, UserCreate, UserUpdate
 from database import verify_connection
 from qdrant_client_provider import verify_qdrant_connection
+from qdrant_store import ensure_collection_exists
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
     verify_connection()
     verify_redis_connection()
     verify_qdrant_connection()
-    initialize_retriever()
+    ensure_collection_exists()
     logger.info("Application startup completed successfully.")
     yield
 

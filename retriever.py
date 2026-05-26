@@ -1,160 +1,26 @@
-import json
-import os
-import numpy as np
-import faiss
-from config import RAG_METADATA_FILE, FAISS_INDEX_FILE, RAG_TOP_K, RAG_SIMILARITY_THRESHOLD
-from embedding_utils import embed_text
 import logging
+from qdrant_store import retrieve_from_qdrant
+from config import RAG_TOP_K
 
 logger = logging.getLogger(__name__)
 
-class FAISSRetriever:
-    def __init__(self):
-        self.metadata = self.load_metadata()
-        self.index = self.load_index()
 
+class QdrantRetriever:
+    def __init__(self, user_id: str):
+        self.user_id = user_id
+        logger.info(f"QdrantRetriever initialized | user_id: {user_id}")
+
+    def retrieve(self, query: str, top_k: int = RAG_TOP_K) -> list[dict]:
         logger.info(
-            f"FAISSRetriever initialized | metadata_count: {len(self.metadata)} "
-            f"index_loaded: {self.index is not None}"
+            f"retriever_stage = retrieve_start user_id: {self.user_id} "
+            f"query_length: {len(query.strip())} top_k: {top_k}"
         )
 
-    def load_metadata(self):
-        if not os.path.exists(RAG_METADATA_FILE):
-            logger.warning(f"Retriever metadata file not found: {RAG_METADATA_FILE}")
-            return []
+        chunks = retrieve_from_qdrant(query, self.user_id, top_k)
 
-        with open(RAG_METADATA_FILE, "r", encoding="utf-8") as file:
-            metadata = json.load(file)
-        logger.info(f"Retriever metadata loaded successfully | metadata_count: {len(metadata)}")
-        return metadata
-    
-    def load_index(self):
-        if not os.path.exists(FAISS_INDEX_FILE):
-            logger.warning(f"FAISS index file not found: {FAISS_INDEX_FILE}")
-            return None
-        
-        index = faiss.read_index(FAISS_INDEX_FILE)
-        logger.info("FAISS index loaded successfully")
-        return index
-    
-    def save_metadata(self):
-        with open(RAG_METADATA_FILE, "w", encoding = "utf-8") as file:
-            json.dump(self.metadata, file, indent = 4)
-
-        logger.info(f"Retriever metadata saved successfully | metadata_count: {len(self.metadata)}")
-    
-    def save_index(self):
-        if self.index is None:
-            logger.warning("save_index skipped because FAISS index is None")
-            return
-        
-        faiss.write_index(self.index, FAISS_INDEX_FILE)
-        logger.info("FAISS index saved successfully")
-
-    def add_chunks(self, chunks: list[dict]):
-        logger.info(f"retriever_stage = add_chunks_start chunk_count: {len(chunks)}")
-        if not chunks:
-            logger.info("retriever_stage = add_chunks_skipped reason = no_chunks")
-            return {
-                "added_chunks": 0
-            }
-        
-        embedding_vectors = []
-        valid_chunks = []
-
-        for chunk in chunks:
-            chunk_content = chunk.get("content", "").strip()
-
-            if not chunk_content:
-                logger.info("retriever_stage = chunk_skipped reason = empty_content")
-                continue
-
-            embedding = embed_text(chunk_content)
-            embedding_vectors.append(embedding)
-            valid_chunks.append(chunk)
-
-        if not embedding_vectors:
-            logger.info("retriever_stage = add_chunks_skipped reason = no_valid_embeddings")
-            return {
-                "added_chunks": 0
-            }
-
-        embedding_matrix = np.array(embedding_vectors, dtype="float32")
-        faiss.normalize_L2(embedding_matrix)
-
-        if self.index is None:
-            vector_dimension = embedding_matrix.shape[1]
-            self.index = faiss.IndexFlatIP(vector_dimension)
-            logger.info(f"retriever_stage = index_created vector_dimension: {vector_dimension}")
-        
-        self.index.add(embedding_matrix)
-        self.metadata.extend(valid_chunks)
-        
-        self.save_index()
-        self.save_metadata()
-        
         logger.info(
-            f"retriever_stage = add_chunks_done added_chunks: {len(valid_chunks)} metadata_count: {len(self.metadata)}"
-        )
-        
-        return {
-            "added_chunks": len(valid_chunks)
-        }
-
-    def retrieve(self, query, top_k = RAG_TOP_K):
-        logger.info(
-            f"retriever_stage = retrieve_start query_length: {len(query.strip())} "
-            f"top_k: {top_k} similarity_threshold: {RAG_SIMILARITY_THRESHOLD}"
+            f"retriever_stage = retrieve_done user_id: {self.user_id} "
+            f"returned: {len(chunks)}"
         )
 
-        if not self.metadata or self.index is None:
-            logger.warning(
-                f"retriever_stage = retrieve_skipped reason = missing_metadata_or_index "
-                f"metadata_count: {len(self.metadata)} index_loaded: {self.index is not None}"
-            )
-            return []
-
-        query_embedding = embed_text(query)
-        query_vector = np.array([query_embedding], dtype = "float32")
-
-        faiss.normalize_L2(query_vector)
-
-        distances, indices = self.index.search(query_vector, top_k)
-        logger.info(
-            f"retriever_stage = faiss_search_done raw_scores: {distances[0].tolist()} "
-            f"raw_indices: {indices[0].tolist()}"
-        )
-
-        results = []
-        for score, idx in zip(distances[0], indices[0]):
-            if idx < 0 or idx >= len(self.metadata):
-                logger.info(
-                    f"retriever_stage = chunk_skipped reason = invalid_index "
-                    f"idx: {idx} score: {round(float(score), 4)}"
-                )
-                continue
-
-            similarity_score = float(score)
-
-            if similarity_score < RAG_SIMILARITY_THRESHOLD:
-                logger.info(
-                    f"retriever_stage = chunk_skipped reason = below_threshold "
-                    f"chunk_id: {self.metadata[idx]['id']} "
-                    f"score: {round(similarity_score, 4)} "
-                    f"threshold: {RAG_SIMILARITY_THRESHOLD}"
-                )
-                continue
-
-            chunk = self.metadata[idx]
-
-            results.append({
-                "id": chunk["id"],
-                "title": chunk["title"],
-                "content": chunk["content"],
-                "score": round(float(score), 4)
-            })
-        
-        logger.info(
-            f"retriever_stage = retrieve_done returned_count: {len(results)}"
-        )
-        return results
+        return chunks

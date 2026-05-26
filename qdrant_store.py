@@ -1,7 +1,7 @@
 import logging
 import uuid as uuid_module
 from embedding_utils import embed_text
-from qdrant_client.models import Distance, VectorParams, PointStruct
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client import QdrantClient
 from config import QDRANT_COLLECTION_NAME
@@ -31,6 +31,7 @@ def ensure_collection_exists():
         logger.info(f"qdrant_stage = collection_created name: {QDRANT_COLLECTION_NAME} dimension: {EMBEDDING_DIMENSION}")
 
 def upsert_chunks(chunks: list[dict], user_id: str) -> dict:
+
     client: QdrantClient = get_qdrant_client()
 
     points = []
@@ -62,3 +63,42 @@ def upsert_chunks(chunks: list[dict], user_id: str) -> dict:
     )
 
     return {"added_chunks": len(points)}
+
+ 
+
+def retrieve_from_qdrant(query: str, user_id: str, top_k: int = 5) -> list[dict]:
+    client: QdrantClient = get_qdrant_client()
+
+    query_vector = embed_text(query)
+
+    results = client.query_points(
+        collection_name=QDRANT_COLLECTION_NAME,
+        query=query_vector,
+        query_filter=Filter(
+            must=[
+                FieldCondition(
+                    key="user_id",
+                    match=MatchValue(value=user_id)
+                )
+            ]
+        ),
+        limit=top_k,
+        with_payload=True
+    )
+
+    chunks = []
+    for point in results.points:
+        payload = point.payload or {}
+        chunks.append({
+            "id": payload.get("chunk_id", ""),
+            "title": payload.get("title", ""),
+            "content": payload.get("content", ""),
+            "score": round(point.score, 4)
+        })
+
+    logger.info(
+        f"qdrant_stage = retrieve_done user_id: {user_id} "
+        f"top_k: {top_k} returned: {len(chunks)}"
+    )
+
+    return chunks
