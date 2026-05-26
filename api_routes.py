@@ -283,9 +283,7 @@ async def upload_pdf(http_request: Request, file: UploadFile = File(...), user: 
         
         file.file.seek(0)
 
-        retriever = get_retriever()
-
-        result = ingest_pdf_file(file.file, file.filename, retriever)
+        result = ingest_pdf_file(file.file, file.filename, str(user.id))
 
         reload_retriever()
 
