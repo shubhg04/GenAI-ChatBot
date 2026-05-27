@@ -1,5 +1,8 @@
 import logging
 from typing import List
+from langchain_community.retrievers import BM25Retriever
+from langchain_core.documents import Document
+from qdrant_store import fetch_all_chunks_for_user
 from langchain_core.prompts import PromptTemplate
 from langchain_classic.retrievers.multi_query import MultiQueryRetriever
 from langchain_groq import ChatGroq
@@ -101,3 +104,31 @@ def build_multi_query_retriever(user_id: str) -> MultiQueryRetriever:
     )
 
     return multi_query_retriever
+
+
+def build_bm25_retriever(user_id: str) -> BM25Retriever:
+    logger.info(f"bm25_stage = build_start user_id: {user_id}")
+
+    chunks = fetch_all_chunks_for_user(user_id)
+
+    if not chunks:
+        logger.warning(f"bm25_stage = build_empty_corpus user_id: {user_id}")
+        documents = [Document(page_content="", metadata={"id": "empty", "title": ""})]
+    else:
+        documents = [
+            Document(
+                page_content=chunk["content"],
+                metadata={"id": chunk["id"], "title": chunk["title"]}
+            )
+            for chunk in chunks
+        ]
+
+    bm25_retriever = BM25Retriever.from_documents(documents)
+    bm25_retriever.k = RAG_TOP_K
+
+    logger.info(
+        f"bm25_stage = build_done user_id: {user_id} "
+        f"document_count: {len(documents)} k: {RAG_TOP_K}"
+    )
+
+    return bm25_retriever
