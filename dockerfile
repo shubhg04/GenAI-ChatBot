@@ -12,7 +12,7 @@ COPY requirements.txt .
 # Prevents sentence-transformers from pulling ~2GB of CUDA libs
 # Install dependencies
 RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+ && pip install --no-cache-dir "torch==2.6.0+cpu" --index-url https://download.pytorch.org/whl/cpu \
  && pip install --no-cache-dir -r requirements.txt
 
 # Copy entire project
