@@ -20,6 +20,3 @@ data/
 *.db
 *.sqlite
 *.sqlite3
-
-# FAISS + RAG generated files
-*.index

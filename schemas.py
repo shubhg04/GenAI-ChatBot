@@ -58,14 +58,6 @@ class FeedbackSummaryResponse(BaseModel):
     average_rating: float
     ratings_count: dict[str, int]
 
-class BuildKnowledgeBaseResponse(BaseModel):
-    message: str
-    total_documents: int
-    processed_documents: int
-    skipped_documents: int
-    total_chunks: int
-    knowledge_file: str
-
 class UploadedDocumentChunk(BaseModel):
     id: str
     title: str

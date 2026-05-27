@@ -4,7 +4,6 @@ from fastapi import Depends
 from fastapi import APIRouter, HTTPException, Request, Form, UploadFile, File
 from dependencies import get_memory, build_chat_service
 from feedback_manager import FeedbackManager
-from build_knowledge_base import build_knowledge_base
 from pdf_ingestion import ingest_pdf_file
 import logging
 from schemas import (
@@ -14,7 +13,6 @@ from schemas import (
     ResetResponse, 
     FeedbackRequest, 
     FeedbackSummaryResponse, 
-    BuildKnowledgeBaseResponse,
     UploadPDFResponse
 )
 
@@ -244,30 +242,8 @@ def feedback_summary(http_request: Request, user: User = Depends(current_active_
             f"Request ID: {request_id} - Error while generating feedback summary"
         )
         raise HTTPException(status_code = 500, detail = str(error))
-
-@router.post("/knowledge-base/re-build", response_model = BuildKnowledgeBaseResponse, tags = ["RAG"])
-def rebuild_knowledge_base(http_request: Request):
-    request_id = http_request.state.request_id
-
-    try:
-        logger.info(
-            f"Request ID: {request_id} - Rebuilding knowledge base"
-        )
-
-        result = build_knowledge_base()
-
-        logger.info(
-            f"Request ID: {request_id} - Knowledge base rebuilt successfully with | document {result['total_documents']} | chunks {result['total_chunks']} | file {result['knowledge_file']}"
-        )
-
-        return result
     
-    except Exception as error:
-        logger.exception(
-            f"Request ID: {request_id} - Error while rebuilding knowledge base: {str(error)}"
-        )
-        raise HTTPException(status_code = 500, detail = str(error))
-    
+
 @router.post("/upload-pdf", response_model = UploadPDFResponse, tags = ["Documents"])
 async def upload_pdf(http_request: Request, file: UploadFile = File(...), user: User = Depends(current_active_user)):
     request_id = http_request.state.request_id
