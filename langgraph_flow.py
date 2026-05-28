@@ -5,6 +5,7 @@ from langgraph.graph import StateGraph, END
 from routing import classify_intent, handlers
 from response_evaluator import ResponseEvaluator
 from langchain_memory_adapter import LangChainMemoryAdapter
+from retriever import retrieve_as_dicts
 from config import RAG_TOP_K
 import re
 
@@ -72,7 +73,8 @@ def retrieve_node(state: GraphState) -> GraphState:
             f"graph_node = retrieve_query_built original_input: {state['user_input']} retrieval_query: {retrieval_query}"
         )
 
-        retrieved_chunks = state["retriever"].retrieve(
+        retrieved_chunks = retrieve_as_dicts(
+            state["retriever"],
             retrieval_query,
             top_k=RAG_TOP_K
         )
