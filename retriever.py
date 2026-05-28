@@ -5,6 +5,7 @@ from langchain_core.documents import Document
 from qdrant_store import fetch_all_chunks_for_user
 from langchain_core.prompts import PromptTemplate
 from langchain_classic.retrievers.multi_query import MultiQueryRetriever
+from langchain_classic.retrievers import EnsembleRetriever
 from langchain_groq import ChatGroq
 from config import MODEL_NAME
 from langchain_core.retrievers import BaseRetriever
@@ -64,6 +65,7 @@ class QdrantRetriever(BaseRetriever):
             }
             for doc in documents[:top_k]
         ]
+    
     
 MULTI_QUERY_PROMPT = PromptTemplate(
     input_variables=["question"],
@@ -132,3 +134,47 @@ def build_bm25_retriever(user_id: str) -> BM25Retriever:
     )
 
     return bm25_retriever
+
+
+def build_ensemble_retriever(user_id: str) -> EnsembleRetriever:
+    logger.info(f"ensemble_stage = build_start user_id: {user_id}")
+
+    bm25_retriever = build_bm25_retriever(user_id)
+    qdrant_retriever = QdrantRetriever(user_id=user_id)
+
+    ensemble_retriever = EnsembleRetriever(
+        retrievers=[bm25_retriever, qdrant_retriever],
+        weights=[0.5, 0.5]
+    )
+
+    logger.info(
+        f"ensemble_stage = build_done user_id: {user_id} "
+        f"retrievers: [bm25, qdrant] weights: [0.5, 0.5]"
+    )
+
+    return ensemble_retriever
+
+
+def build_hybrid_retriever(user_id: str) -> MultiQueryRetriever:
+    logger.info(f"hybrid_stage = build_start user_id: {user_id}")
+
+    ensemble_retriever = build_ensemble_retriever(user_id)
+
+    query_generation_llm = ChatGroq(
+        model=MODEL_NAME,
+        temperature=0.0,
+    )
+
+    hybrid_retriever = MultiQueryRetriever.from_llm(
+        retriever=ensemble_retriever,
+        llm=query_generation_llm,
+        prompt=MULTI_QUERY_PROMPT,
+        include_original=True,
+    )
+
+    logger.info(
+        f"hybrid_stage = build_done user_id: {user_id} "
+        f"architecture: MultiQuery -> Ensemble(BM25 + Qdrant) llm: {MODEL_NAME}"
+    )
+
+    return hybrid_retriever
