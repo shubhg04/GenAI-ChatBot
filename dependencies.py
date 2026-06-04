@@ -1,5 +1,6 @@
 import logging
-from retriever import QdrantRetriever
+from langchain_core.retrievers import BaseRetriever
+from retriever import build_compression_retriever
 from chat_service import ChatService
 from memory_manager import MemoryManager
 
@@ -12,8 +13,8 @@ debug_mode = False
 def get_memory(session_id: str, user_id: UUID):
     return MemoryManager(session_id, user_id)
 
-def get_retriever(user_id: UUID) -> QdrantRetriever:
-    return QdrantRetriever(user_id=str(user_id))
+def get_retriever(user_id: UUID) -> BaseRetriever:
+    return build_compression_retriever(str(user_id))
 
 def build_chat_service(memory, user_id: UUID):
     return ChatService(memory, retriever=get_retriever(user_id), debug=debug_mode)
