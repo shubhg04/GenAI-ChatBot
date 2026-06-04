@@ -1,5 +1,8 @@
 import os
 
+from typing import Literal
+from pydantic import BaseModel, Field
+
 MODEL_NAME = "llama-3.1-8b-instant"
 EVALUATOR_MODEL_NAME = "llama-3.1-8b-instant"
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
@@ -113,5 +116,10 @@ MULTI_QUERY_PROMPT_TEMPLATE = (
     "Original question: {question}\n\n"
     "Three rephrased questions:"
 )
+
+class IntentSchema(BaseModel):
+    intent: Literal["chat", "summarize", "email", "code"] = Field(
+        description="The single intent label that best matches the user's message."
+    )
 
 

@@ -1,8 +1,8 @@
-from config import MODEL_NAME, CLASSIFIER_SYSTEM_PROMPT
+from config import MODEL_NAME, CLASSIFIER_SYSTEM_PROMPT, IntentSchema
 from handler import handle_chat, handle_email, handle_summarize, handle_code
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from typing import cast
 
 classifier_llm = ChatGroq(
     model=MODEL_NAME,
@@ -14,23 +14,16 @@ CLASSIFIER_PROMPT = ChatPromptTemplate.from_messages([
     ("user", "{user_input}")
 ])
 
-classifier_parser = StrOutputParser()
+structured_classifier_llm = classifier_llm.with_structured_output(IntentSchema)
 
-classifier_chain = CLASSIFIER_PROMPT | classifier_llm | classifier_parser
+classifier_chain = CLASSIFIER_PROMPT | structured_classifier_llm
 
 def classify_intent(user_input):
-    raw_intent = classifier_chain.invoke({
+    result = cast(IntentSchema, classifier_chain.invoke({
         "user_input": user_input
-    }).strip().lower()
+    }))
 
-    intent = raw_intent.split()[0]
-
-    valid_intents = ["chat", "summarize", "email", "code"]
-
-    if intent not in valid_intents:
-        intent = "chat"
-
-    return intent
+    return result.intent
 
 handlers = {
     "chat": handle_chat,
