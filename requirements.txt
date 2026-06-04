@@ -7,7 +7,8 @@ langchain-community
 langgraph
 langgraph-checkpoint-postgres
 groq
-sentence-transformers
+sentence-transformers==3.3.1
+transformers>=4.41,<5.0
 numpy
 pydantic
 pymupdf
@@ -22,4 +23,5 @@ redis
 asyncpg
 qdrant-client
 cohere
+langchain-cohere
 rank-bm25

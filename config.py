@@ -3,6 +3,7 @@ import os
 MODEL_NAME = "llama-3.1-8b-instant"
 EVALUATOR_MODEL_NAME = "llama-3.1-8b-instant"
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+COHERE_RERANK_MODEL = "rerank-v3.5"
 
 RAG_TOP_K = 5
 RAG_SIMILARITY_THRESHOLD = 0.2
@@ -14,6 +15,7 @@ QDRANT_URL = os.environ.get("QDRANT_URL", "")
 QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY", "")
 QDRANT_COLLECTION_NAME = "chatbot_chunks"
 
+COHERE_API_KEY = os.environ.get("COHERE_API_KEY", "")
 
 CLASSIFIER_SYSTEM_PROMPT = """
 You are a strict intent classifier.
