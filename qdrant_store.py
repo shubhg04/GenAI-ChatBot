@@ -1,7 +1,7 @@
 import logging
 import uuid as uuid_module
 from embedding_utils import embed_text
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, PayloadSchemaType
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, PayloadSchemaType, FilterSelector
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client import QdrantClient
 from config import QDRANT_COLLECTION_NAME
@@ -163,3 +163,31 @@ def fetch_all_chunks_for_user(user_id: str) -> list[dict]:
     )
 
     return all_chunks
+
+
+def delete_chunks_by_doc_id(doc_id: str, user_id: str) -> dict:
+    client: QdrantClient = get_qdrant_client()
+
+    client.delete(
+        collection_name=QDRANT_COLLECTION_NAME,
+        points_selector=FilterSelector(
+            filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="user_id",
+                        match=MatchValue(value=user_id)
+                    ),
+                    FieldCondition(
+                        key="doc_id",
+                        match=MatchValue(value=doc_id)
+                    )
+                ]
+            )
+        )
+    )
+
+    logger.info(
+        f"qdrant_stage = delete_done doc_id: {doc_id} user_id: {user_id}"
+    )
+
+    return {"deleted": True, "doc_id": doc_id}

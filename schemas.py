@@ -70,3 +70,16 @@ class UploadPDFResponse(BaseModel):
     total_characters: int
     total_chunks: int
     chunks: list[UploadedDocumentChunk]
+
+class DocumentItem(BaseModel):
+    doc_id: str
+    filename: str
+    uploaded_at: str
+
+class DocumentListResponse(BaseModel):
+    total: int
+    documents: list[DocumentItem]
+
+class DocumentDeleteResponse(BaseModel):
+    message: str
+    doc_id: str
