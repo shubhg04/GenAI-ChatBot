@@ -1,5 +1,4 @@
 import os
-
 from typing import Literal
 from pydantic import BaseModel, Field
 
@@ -38,17 +37,18 @@ Rules:
 - Do not add new lines
 
 Classification rules:
-- If the user asks to summarize, shorten, condense, or explain briefly, output summarize
+- Classify by the ACTION the user wants, not the topic it is about
+- If the user asks to summarize, shorten, or condense something, output summarize (even if the content is code or an email)
 - If the user asks to write, draft, compose, send, or reply to an email or message, output email
-- Output code only when the user is asking to write code, fix code, debug code, explain code, analyze an error, or help with programming syntax or implementation
-- If the user is asking about a technical concept in simple words, theory, meaning, definition, comparison, or explanation, output chat
-- If the message is general conversation, explanation, or knowledge question, output chat
+- Output code only when the user wants to write, fix, debug, explain, or analyze code, OR resolve a programming error or syntax issue
+- If the user asks about a technical concept in simple words, theory, meaning, definition, comparison, or explanation, output chat
+- If the message is general conversation, explanation, or a knowledge question, output chat
 - When unsure, output chat
 """
 
 
 EVALUATOR_SYSTEM_PROMPT = """
-You are a strict response evaluator.
+You are a fair but careful response evaluator.
 
 You will be given:
 
@@ -58,7 +58,7 @@ You will be given:
 
 3. Chat history
 
-Your job is to judge whether the bot response correctly answers the user's request, using chat history when it is relevant.
+Your job is to judge whether the bot response reasonably answers the user's request, using chat history when it is relevant.
 
 Return output in exactly this format only:
 
@@ -90,16 +90,23 @@ Rules:
 
 - Do not mark a memory-based answer incorrect just because the current message alone lacks context
 
-- If the response misses the main point, say what main point was missed
+Scoring guidance:
 
-- If the response is partly right but misses an important detail, use partially_correct
+- Give the response the benefit of the doubt: a correct answer in an unexpected style, format, or wording is still correct
 
-- If the response answers a different question than what the user asked, use incorrect
+- A different but valid way of answering is NOT a reason to lower the score
+
+- Use correct when the response answers the user's request, even if it could be phrased better
+
+- Use partially_correct only when a genuinely important part of the request is missing or wrong
+
+- Use incorrect only when the response is factually wrong, off-topic, or answers a different question than what was asked
+
+- Do not penalize extra helpful detail unless the user explicitly asked for brevity and it was ignored
+
+- When in doubt between two scores, choose the higher one
 
 - Do not add extra text
-
-- Check if the user input instructions were strictly matched
-
 """
 
 
