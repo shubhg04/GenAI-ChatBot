@@ -7,14 +7,15 @@ from langgraph_flow import GraphState
 logger = logging.getLogger(__name__)
 
 class ChatService:
-    def __init__(self, memory, retriever, debug=False):
+    def __init__(self, memory, user_id, retriever_builder, debug=False):
         self.memory = memory
         self.debug = debug
-        self.retriever = retriever
+        self.user_id = user_id
+        self.retriever_builder = retriever_builder
         self.chat_log_repository = ChatLogRepository()
         self.graph = build_langgraph_flow()
 
-    def process(self, user_input, session_id, request_id, user_id, use_rag=True, debug=False):
+    def process(self, user_input, session_id, request_id, user_id, use_rag=True, debug=False, selected_doc_ids=None):
         clean_input = user_input.strip()
         if not clean_input:
             raise ValueError("Your input cannot be empty.")
@@ -27,13 +28,16 @@ class ChatService:
         logger.info(
             f"Request ID: {request_id} flow = graph_start Session: {session_id}"
         )
+        
+        retriever = self.retriever_builder(user_id, selected_doc_ids)
 
         initial_state = {
             "user_input": clean_input,
             "session_id": session_id,
             "user_id": user_id,
             "use_rag": use_rag,
-            "retriever": self.retriever,
+            "selected_doc_ids": selected_doc_ids,
+            "retriever": retriever,
             "intent": "",
             "retrieved_chunks": [],
             "rag_used": False,

@@ -16,6 +16,7 @@ class ChatRequest(BaseModel):
     session_id: str = Field(..., min_length=1)
     use_rag: bool = True
     debug: bool = False
+    selected_doc_ids: list[str] | None = None
 
 class RetrievedChunk(BaseModel):
     id: str

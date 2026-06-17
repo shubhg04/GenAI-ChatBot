@@ -44,7 +44,7 @@ def chat(
         logger.info(
             f"Request ID: {request_id} - endpoint = /chat stage = request_received "
             f"user_id: {user.id} Session: {request.session_id} message_length: {len(request.user_input.strip())} "
-            f"use_rag: {request.use_rag} debug: {request.debug}"
+            f"use_rag: {request.use_rag} debug: {request.debug} selected_doc_ids: {request.selected_doc_ids}"
         )
         
         memory = get_memory(request.session_id, user.id)
@@ -61,7 +61,8 @@ def chat(
             request_id,
             user.id,
             use_rag = request.use_rag,
-            debug = request.debug
+            debug = request.debug,
+            selected_doc_ids = request.selected_doc_ids
         )
 
         logger.info(

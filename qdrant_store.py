@@ -1,13 +1,12 @@
 import logging
 import uuid as uuid_module
 from embedding_utils import embed_text
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, PayloadSchemaType, FilterSelector
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, MatchAny, PayloadSchemaType, FilterSelector
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client import QdrantClient
 from config import QDRANT_COLLECTION_NAME
 from qdrant_client_provider import get_qdrant_client
-
-
+from qdrant_client.models import Condition
 
 logger = logging.getLogger(__name__)
 
@@ -85,22 +84,30 @@ def upsert_chunks(chunks: list[dict], user_id: str) -> dict:
     return {"added_chunks": len(points)}
 
 
-def retrieve_from_qdrant(query: str, user_id: str, top_k: int = 5) -> list[dict]:
+def retrieve_from_qdrant(query: str, user_id: str, top_k: int = 5, selected_doc_ids: list[str] | None = None) -> list[dict]:
     client: QdrantClient = get_qdrant_client()
 
     query_vector = embed_text(query)
 
+    must_conditions: list[Condition] = [
+        FieldCondition(
+            key="user_id",
+            match=MatchValue(value=user_id)
+        )
+    ]
+
+    if selected_doc_ids:
+        must_conditions.append(
+            FieldCondition(
+                key="doc_id",
+                match=MatchAny(any=selected_doc_ids)
+            )
+        )
+
     results = client.query_points(
         collection_name=QDRANT_COLLECTION_NAME,
         query=query_vector,
-        query_filter=Filter(
-            must=[
-                FieldCondition(
-                    key="user_id",
-                    match=MatchValue(value=user_id)
-                )
-            ]
-        ),
+        query_filter=Filter(must=must_conditions),
         limit=top_k,
         with_payload=True
     )
@@ -117,14 +124,29 @@ def retrieve_from_qdrant(query: str, user_id: str, top_k: int = 5) -> list[dict]
 
     logger.info(
         f"qdrant_stage = retrieve_done user_id: {user_id} "
-        f"top_k: {top_k} returned: {len(chunks)}"
+        f"top_k: {top_k} returned: {len(chunks)} scoped: {bool(selected_doc_ids)}"
     )
 
     return chunks
 
 
-def fetch_all_chunks_for_user(user_id: str) -> list[dict]:
+def fetch_all_chunks_for_user(user_id: str, selected_doc_ids: list[str] | None = None) -> list[dict]:
     client: QdrantClient = get_qdrant_client()
+
+    must_conditions: list[Condition] = [
+        FieldCondition(
+            key="user_id",
+            match=MatchValue(value=user_id)
+        )
+    ]
+
+    if selected_doc_ids:
+        must_conditions.append(
+            FieldCondition(
+                key="doc_id",
+                match=MatchAny(any=selected_doc_ids)
+            )
+        )
 
     all_chunks = []
     next_page_offset = None
@@ -132,14 +154,7 @@ def fetch_all_chunks_for_user(user_id: str) -> list[dict]:
     while True:
         points, next_page_offset = client.scroll(
             collection_name=QDRANT_COLLECTION_NAME,
-            scroll_filter=Filter(
-                must=[
-                    FieldCondition(
-                        key="user_id",
-                        match=MatchValue(value=user_id)
-                    )
-                ]
-            ),
+            scroll_filter=Filter(must=must_conditions),
             limit=100,
             offset=next_page_offset,
             with_payload=True,
@@ -159,7 +174,7 @@ def fetch_all_chunks_for_user(user_id: str) -> list[dict]:
 
     logger.info(
         f"qdrant_stage = fetch_all_done user_id: {user_id} "
-        f"total_chunks: {len(all_chunks)}"
+        f"total_chunks: {len(all_chunks)} scoped: {bool(selected_doc_ids)}"
     )
 
     return all_chunks
