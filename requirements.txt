@@ -6,6 +6,7 @@ langchain-groq
 langchain-community
 langgraph
 langgraph-checkpoint-postgres
+psycopg[binary]
 groq
 sentence-transformers==3.3.1
 transformers>=4.41,<5.0
